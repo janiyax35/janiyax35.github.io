@@ -19,7 +19,23 @@ A modern, responsive cybersecurity-themed portfolio website showcasing my skills
 
 ## 📁 File Structure
 
-portfolio-website/ ├── index.html # Main HTML file ├── assets/ │ ├── css/ │ │ ├── style.css # Main stylesheet │ │ └── animations.css # Animation-specific styles │ ├── js/ │ │ ├── main.js # Main JavaScript functionality │ │ ├── matrix-animation.js # Matrix background animation │ │ └── email.js # EmailJS integration │ ├── images/ │ │ └── profile.jpg # Profile picture │ └── resume/ │ └── janith_deshan_resume.pdf # Resume PDF └── README.md # Project documentation
+project-root/
+├── index.html
+├── assets/
+│   ├── css/
+│   │   ├── style.css
+│   │   └── animations.css
+│   ├── js/
+│   │   ├── main.js
+│   │   ├── matrix.js
+│   │   └── email.js
+│   ├── images/
+│   │   ├── profile.jpg
+│   │   ├── projects/
+│   │   └── cyber-frames/
+│   └── resume/
+│       └── janith_deshan_resume.pdf
+└── README.md
 
 
 ## 🚀 Setup Instructions
