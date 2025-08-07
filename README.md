@@ -1,122 +1,140 @@
-# Cybersecurity Portfolio Website
+<!-- Cybersecurity Portfolio README - Janith Deshan -->
 
-![Cybersecurity Portfolio](https://img.shields.io/badge/Portfolio-Cybersecurity-brightgreen)
-![Status](https://img.shields.io/badge/Status-Active-success)
-![Last Updated](https://img.shields.io/badge/Last%20Updated-July%202025-blue)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/janiyax35/janiyax35.github.io/main/assets/images/profile.jpg" width="140" style="border-radius: 50%;" alt="Janith Deshan" />
+</p>
 
-A modern, responsive cybersecurity-themed portfolio website showcasing my skills, projects, and academic journey. This portfolio features an interactive matrix background animation, terminal-style elements, and secure contact functionality.
+<h1 align="center" style="font-family: 'Share Tech Mono', monospace;">
+  <span style="color:#0f0;">&#60;Janith Deshan&#62;</span>
+</h1>
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&duration=2500&pause=500&color=0FFF00&background=0A0A0A00&center=true&width=650&lines=Cybersecurity+Undergraduate;Network+Security+%7C+Web+Dev+%7C+Pentesting;Defending+the+Digital+Realm;Welcome+to+my+Cyber+Portfolio!+%F0%9F%94%91" alt="Typing SVG" />
+</p>
 
-## 🔐 Features
+---
 
-- **Cybersecurity Theme** - Dark interface with matrix animation and terminal elements
-- **Responsive Design** - Fully responsive across all device sizes
-- **Interactive UI** - Animations and visual effects that engage visitors
-- **Project Showcase** - Card-based project display linking to GitHub repositories
-- **Academic Journey Timeline** - Visual representation of academic progress
-- **Skills Visualization** - Visual indicators of proficiency levels
-- **Contact Form Integration** - EmailJS powered secure messaging system
-- **Social Media Integration** - Links to all professional profiles
+## 👨‍💻 About Me
 
-## 📁 File Structure
+```bash
+whoami
+Janith Deshan Mihijaya Samaratunga
+Status: BSc (Hons) Information Technology Specialized in Cyber Security
+Location: Homagama, Sri Lanka
+```
 
-project-root/
-├── index.html
-├── assets/
-│   ├── css/
-│   │   ├── style.css
-│   │   └── animations.css
-│   ├── js/
-│   │   ├── main.js
-│   │   ├── matrix.js
-│   │   └── email.js
-│   ├── images/
-│   │   ├── profile.jpg
-│   │   ├── projects/
-│   │   └── cyber-frames/
-│   └── resume/
-│       └── janith_deshan_resume.pdf
-└── README.md
+🔒 Passionate about cybersecurity, network systems, and secure application development.<br>
+🔬 Exploring digital forensics, penetration testing, and ethical hacking.<br>
+📚 Currently studying at SLIIT, Malabe Campus.
 
+---
 
-## 🚀 Setup Instructions
+## 🛡️ My Portfolio
 
-### Prerequisites
+> 🚀 **[Live Portfolio Website](https://janiyax35.github.io/)**
 
-- GitHub account
-- Basic knowledge of HTML, CSS, and JavaScript
-- EmailJS account (for contact form functionality)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/janiyax35/janiyax35.github.io/main/assets/images/demo.gif" alt="portfolio demo" width="500">
+</p>
 
-### Installation
+---
 
-1. **Clone the repository**
-git clone https://github.com/yourusername/yourusername.github.io.git cd yourusername.github.io
+## 💻 Skills
 
+```javascript
+const skills = [
+  "Network Security",
+  "Pentesting",
+  "Web Development",
+  "Java",
+  "Python",
+  "Linux",
+  "Cisco Packet Tracer",
+  "Arduino",
+  "Git",
+  "VS Code"
+];
+skills.forEach(s => console.log(`> ${s}`));
+```
 
-2. **Add your profile picture**
-- Add your profile image as `assets/images/profile.jpg`
-- Make sure it's a square image for best results
+---
 
-3. **Add your resume**
-- Save your resume as PDF at `assets/resume/janith_deshan_resume.pdf`
+## 🧠 Projects & Academic Journey
 
-4. **Set up EmailJS for the contact form**
-- Create an account at [EmailJS](https://www.emailjs.com/)
-- Create a new Email Service
-- Create an Email Template with the following variables:
-  - `{{from_name}}` - Sender's name
-  - `{{from_email}}` - Sender's email
-  - `{{subject}}` - Email subject
-  - `{{message}}` - Email message
-  - `{{to_email}}` - Your email address
-- Get your User ID, Service ID, and Template ID
-- Update the placeholders in `assets/js/email.js` with your actual IDs
+<details>
+<summary>Click to expand my timeline</summary>
 
-5. **Test locally**
-- Open `index.html` in your browser to preview
-- Test all links and the contact form
+```
+2023 - Present: BSc (Hons) IT Specialized in Cyber Security @ SLIIT
+  ├── Networking & Security Projects
+  ├── Web-based Wedding Planning System (Java/Eclipse)
+  ├── Home Automation System (Arduino/IoT)
+2023: Advanced Level - Mahanama College
+2020: Ordinary Level - Mahanama College
+```
 
-## 🔧 Customization
+</details>
 
-### Personal Information
+---
 
-Update the following in `index.html`:
+## 📫 Contact
 
-- Name and title
-- About me section
-- Contact information
-- Social media links
-- Educational background
-- Skills and projects
+```bash
+echo "janithmihijaya123@gmail.com"
+echo "github.com/janiyax35"
+echo "linkedin.com/in/janithdeshan"
+```
 
-### GitHub Projects
+---
 
-Update the project cards with:
+## 🌌 Matrix Animation
 
-- Project titles
-- Descriptions
-- Technologies used
-- GitHub repository links
+<p align="center">
+  <img src="https://raw.githubusercontent.com/janiyax35/janiyax35.github.io/main/assets/images/matrix-demo.gif" alt="matrix animation" width="500">
+</p>
 
-### Styling
+---
 
-Customize the appearance by modifying:
+## ✨ Animated Badges & Stats
 
-- `assets/css/style.css` - Main styles and colors
-- `assets/css/animations.css` - Animation effects
+<p align="center">
+  <img src="https://github-profile-trophy.vercel.app/?username=janiyax35&theme=matrix&margin-w=10" alt="Trophies" />
+  <br>
+  <img src="https://github-readme-stats.vercel.app/api?username=janiyax35&count_private=true&show_icons=true&theme=matrix" alt="Stats" />
+  <br>
+  <img src="https://github-readme-streak-stats.herokuapp.com/?user=janiyax35&theme=matrix" alt="Streak" />
+</p>
 
-### Colors
+---
 
-The main color scheme variables are defined in `style.css` under the `:root` selector:
+## 🐍 GitHub Contribution Snake
 
-```css
-:root {
---primary-color: #0f0;           /* Main green color */
---secondary-color: #00eeff;      /* Accent cyan color */
---accent-color: #ff00ff;         /* Magenta accent */
---text-color: #eee;              /* Text color */
---bg-color: #0a0a0a;             /* Background color */
---dark-bg: #080808;              /* Darker background */
---darker-bg: #050505;            /* Darkest background */
---border-color: rgba(0, 255, 0, 0.3); /* Border color */
-}
+<p align="center">
+  <img src="https://github.com/janiyax35/janiyax35/blob/output/github-contribution-grid-snake.svg" alt="GitHub Contribution Snake">
+</p>
 
+---
+
+## ⚡️ Technologies
+
+![Java](https://img.shields.io/badge/-Java-0f0?style=for-the-badge&logo=java&logoColor=white)
+![Python](https://img.shields.io/badge/-Python-00eeff?style=for-the-badge&logo=python&logoColor=white)
+![Linux](https://img.shields.io/badge/-Linux-0f0?style=for-the-badge&logo=linux&logoColor=white)
+![Cisco](https://img.shields.io/badge/-Cisco-00eeff?style=for-the-badge&logo=cisco&logoColor=white)
+![Arduino](https://img.shields.io/badge/-Arduino-0f0?style=for-the-badge&logo=arduino&logoColor=white)
+
+---
+
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=18&duration=3000&pause=800&color=00EEFF&background=0A0A0A00&center=true&vCenter=true&width=650&lines=Thank+you+for+visiting+my+cyber+portfolio!+%F0%9F%94%92;Stay+secure+and+keep+hacking+the+matrix..." alt="Thanks Typing SVG" />
+</p>
+
+---
+
+<!-- Cybersecurity terminal effect for README (not visible on GitHub, only for theme) -->
+<!--
+██████████████████████████████████████████████████████████████████████
+█─▄▄▄▄█▄─▄█─▄▄─█─▄▄─█▄─▄▄─█─▄▄─█▄─▄█─▄─▄─█─▄▄─█▄─▄▄─█─▄─▄─█▄─▄▄▀█
+█▄▄▄▄─██─██─██─█─██─██─▄█▀█─██─██─███─███─██─██─▄█▀█─███─██─██─▄─█
+█─▄▄▄▄█▄▄▄█▄▄▄▄█▄▄▄▄█▄▄▄▄▄█▄▄▄▄█▄▄▄█▄▄▄█▄▄▄▄▄█▄▄▄▄▄█▄▄█▄▄▄█▄▄▄▄▄█
+██████████████████████████████████████████████████████████████████
+-->
