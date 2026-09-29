@@ -176,7 +176,7 @@ html[data-mode="blue"] .chip:is([data-team="blue"], [data-team="both"]) {
   font: 500 11.5px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase;
 }
 .bar__brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13px; letter-spacing: .08em; text-decoration: none; white-space: nowrap; }
-.bar__brand b { color: var(--accent); font-weight: 700; }
+.bar__name { text-transform: none; letter-spacing: .02em; font-size: 14px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); animation: pulse 2.2s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .35; } }
 .bar__nav { display: flex; gap: 2px; margin-left: 10px; }
@@ -723,7 +723,7 @@ html.is-booting .dial { display: none; }
 
 /* root mode (konami) */
 html.is-root .bar { border-bottom-color: color-mix(in srgb, var(--red) 60%, transparent); }
-html.is-root .bar__brand b::after { content: "#"; color: var(--red); }
+html.is-root .bar__name::after { content: " #"; color: var(--red); }
 
 /* reveal (only when JS animations are active) */
 html.anim [data-reveal] { opacity: 0; }
