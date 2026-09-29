@@ -51,7 +51,7 @@
       </div>`).join(""));
 
     fill("#cases-grid", D.projects.map((p) => `
-      <article class="panel case${p.featured ? " case--featured" : ""}" data-slug="${p.slug}"${p.team ? ` data-team="${p.team}"` : ""} data-reveal>
+      <article class="panel case${p.featured ? " case--featured" : ""}" data-slug="${p.slug}" data-case="${p.slug}"${p.team ? ` data-team="${p.team}"` : ""} data-reveal>
         <div class="case__top"><span class="case__id">${esc(p.id)}</span><span>${esc(p.type)}</span></div>
         <div class="case__body">
           <h3 class="case__title">${esc(p.title)}</h3>
@@ -714,7 +714,7 @@
 
       const t = e.target;
       const caseBtn = t.closest("[data-case]");
-      if (caseBtn) return openCase(caseBtn.dataset.case);
+      if (caseBtn && !t.closest("a")) return openCase(caseBtn.dataset.case); // whole card opens the file; its Repo link still works
       if (t.closest("[data-close]")) return t.closest("dialog")?.close();
       if (t.closest("[data-quickview]")) return openQuickView();
       if (t.closest("[data-palette]")) return openPalette();
