@@ -84,17 +84,33 @@
     const thm = $("#thm-link");
     if (thm && P.tryhackme) { thm.href = P.tryhackme; thm.hidden = false; }
     fill("#certs", D.certs.map((c) =>
-      `<li><span class="st st--${c.s} mono">${c.s === "done" ? "✓" : "◌"}</span><span class="grow">${esc(c.t)}<span class="sub">${esc(c.o)}</span></span></li>`).join(""));
+      `<li><span class="st st--${c.s} mono">${c.s === "done" ? "✓" : "◌"}</span><span class="grow">${esc(c.t)}<span class="sub">${esc(c.o)}</span></span>` +
+      `<span class="cert__side"><span class="tag mono">${esc(c.tag)}</span><span class="meta mono">${esc(c.d)}</span></span></li>`).join(""));
     const cc = $("#cert-count");
-    if (cc) cc.textContent = `${D.certs.filter((c) => c.s === "done").length} done · ${D.certs.filter((c) => c.s !== "done").length} in progress`;
-    fill("#gitlog", D.log.map((l) => `
-      <div class="commit">
-        <div class="commit__graph"></div>
-        <div class="commit__body">
-          <div class="commit__line"><span class="commit__hash">${esc(l.h)}</span>${l.ref ? `<span class="commit__ref">${esc(l.ref)}</span>` : ""}<span class="commit__date">${esc(l.d)}</span></div>
-          <p class="commit__msg"><span class="commit__type">${esc(l.type)}:</span> ${esc(l.m)}</p>
-        </div>
-      </div>`).join(""));
+    if (cc) cc.textContent = `${D.certs.filter((c) => c.s === "done").length} earned · ${D.certs.filter((c) => c.s !== "done").length} in progress`;
+
+    // education timeline; the degree's progress bar is calculated from its start/end months
+    const monthIndex = (ym) => { const [y, m] = ym.split("-").map(Number); return y * 12 + (m - 1); };
+    const monthName = (ym) => new Date(ym + "-01T00:00:00").toLocaleString("en-GB", { month: "short", year: "numeric" });
+    fill("#education", D.education.map((e, i) => {
+      let progress = "";
+      if (e.start && e.end) {
+        const now = new Date(), cur = now.getFullYear() * 12 + now.getMonth();
+        const pct = Math.round(Math.min(1, Math.max(0, (cur - monthIndex(e.start)) / (monthIndex(e.end) - monthIndex(e.start)))) * 100);
+        progress = `<div class="edu__progress"><div class="edu__bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Degree progress"><span style="width:${pct}%"></span></div>` +
+          `<span class="mono">${pct}% complete · graduating ${esc(monthName(e.end))}</span></div>`;
+      }
+      const wip = /progress/i.test(e.status);
+      return `<li class="edu__item${i === 0 && wip ? " is-current" : ""}">
+          <span class="edu__when mono">${esc(e.when)}</span>
+          <div class="edu__top"><h3>${esc(e.t)}</h3><span class="edu__badge edu__badge--${wip ? "wip" : "done"}">${esc(e.status)}</span></div>
+          <p class="edu__org">${esc(e.o)}</p>
+          ${e.d ? `<p class="edu__meta mono">${esc(e.d)}</p>` : ""}
+          ${progress}
+        </li>`;
+    }).join(""));
+    const ec = $("#edu-count");
+    if (ec) ec.textContent = `${D.education.length} records`;
   }
 
   /* ================================================================
@@ -455,7 +471,7 @@
             <div class="qv__sec"><h3>Skills</h3><ul>${skills}</ul></div>
           </div>
           <div>
-            <div class="qv__sec"><h3>Education</h3>${D.education.map((e) => `<div class="qv__kv"><b>${esc(e.t)}</b><span>${esc(e.o)}</span><span class="mono dim" style="font-size:12px">${esc(e.d)}</span></div>`).join("")}</div>
+            <div class="qv__sec"><h3>Education</h3>${D.education.map((e) => `<div class="qv__kv"><b>${esc(e.t)}</b><span>${esc(e.o)}</span><span class="mono dim" style="font-size:12px">${esc(e.when)}${e.d ? " · " + esc(e.d) : ""} · ${esc(e.status)}</span></div>`).join("")}</div>
             <div class="qv__sec"><h3>Highlights</h3><ul>
               <li><b>TryHackMe top 7%</b> globally · 133-day streak · 62 rooms · 12 badges</li>
               <li><b>Kapruka Agent Challenge 2026</b>: Builder certificate (700+ entrants)</li>
@@ -665,32 +681,6 @@
   }
 
   /* ================================================================
-     GITHUB LIVE FEED (home page)
-     ================================================================ */
-  async function ghFeed() {
-    const box = $("#gh-feed");
-    if (!box) return;
-    let data = null;
-    try { data = JSON.parse(sessionStorage.getItem("jd.gh") || "null"); } catch (e) { /* ignore */ }
-    if (!data) {
-      try {
-        const r = await fetch(`https://api.github.com/users/${encodeURIComponent(P.githubUser)}/repos?sort=pushed&per_page=6`, { headers: { Accept: "application/vnd.github+json" } });
-        if (!r.ok) throw new Error(r.status);
-        data = (await r.json()).filter((x) => !x.fork).slice(0, 5).map((x) => ({ n: x.name, u: x.html_url, p: x.pushed_at, l: x.language }));
-        try { sessionStorage.setItem("jd.gh", JSON.stringify(data)); } catch (e) { /* ignore */ }
-      } catch (e) {
-        box.innerHTML = `<li class="dim">Feed unavailable (offline or rate-limited). <a class="accent" href="${esc(P.github)}" ${ext}>View on GitHub ↗</a></li>`;
-        return;
-      }
-    }
-    box.innerHTML = data.map((x) => {
-      const d = new Date(x.p);
-      const ts = isNaN(d) ? "" : d.toISOString().slice(0, 10);
-      return `<li><span class="ev">PUSH</span><a class="grow" href="${esc(x.u)}" ${ext}>${esc(x.n)}</a><span class="meta">${esc(x.l || "")} ${esc(ts)}</span></li>`;
-    }).join("");
-  }
-
-  /* ================================================================
      CLOCK
      ================================================================ */
   function clock() {
@@ -814,8 +804,6 @@
       if (en.isIntersecting) { io.disconnect(); window.JDTerm.init(xterm); }
     }, { rootMargin: "300px" }).observe(xterm);
   }
-
-  ghFeed();
 
   boot().then(() => {
     heroIntro();
