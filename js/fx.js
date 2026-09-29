@@ -189,6 +189,318 @@ window.JDFX = (() => {
   }
 
   /* ---------------------------------------------------------------
+     THREAT GLOBE (The Lab hero)
+     A full dotted Earth centred on Homagama, Sri Lanka. Simulated
+     attack arcs fly in from around the world and are stopped by a
+     shield at the pin. Visitors can drag to spin it; it eases back.
+     Land: Natural Earth 1:110m via world-atlas (jsdelivr, SRI-checked).
+     --------------------------------------------------------------- */
+  const LAND_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json";
+  const LAND_SRI = "sha384-5oFOGoMd0tkagYW08lVco4uAi7XDEDBwBxOdeKx+SA1ihbsHiR/aFAJGretluTzG";
+  const HOME = { lat: 6.8441, lon: 80.0024, label: "HOMAGAMA, LK", coords: "06.84°N 80.00°E" };
+  const D2R = Math.PI / 180;
+
+  // Rasterize land polygons to an equirectangular bitmap, then test points against it.
+  async function loadLandMask() {
+    if (!window.topojson) throw new Error("topojson missing");
+    const res = await fetch(LAND_URL, { integrity: LAND_SRI, mode: "cors" });
+    if (!res.ok) throw new Error("land " + res.status);
+    const topo = await res.json();
+    const land = window.topojson.feature(topo, topo.objects.land);
+    const W = 720, H = 360;
+    const cv = document.createElement("canvas");
+    cv.width = W; cv.height = H;
+    const g = cv.getContext("2d");
+    g.fillStyle = "#fff";
+    const polys = [];
+    (land.features || [land]).forEach((f) => {
+      const geo = f.geometry;
+      if (geo.type === "Polygon") polys.push(geo.coordinates);
+      else if (geo.type === "MultiPolygon") polys.push(...geo.coordinates);
+    });
+    for (const poly of polys) {
+      for (const shift of [-360, 0, 360]) {
+        g.beginPath();
+        for (const ring of poly) {
+          let prev = null, off = 0;
+          ring.forEach(([lon, lat], i) => {
+            // unwrap across the antimeridian so rings stay continuous
+            if (prev !== null && Math.abs(lon + off - prev) > 180) off += prev > lon + off ? 360 : -360;
+            const L = lon + off;
+            prev = L;
+            const x = ((L + shift + 180) / 360) * W, y = ((90 - lat) / 180) * H;
+            i ? g.lineTo(x, y) : g.moveTo(x, y);
+          });
+          g.closePath();
+        }
+        g.fill("evenodd");
+      }
+    }
+    const data = g.getImageData(0, 0, W, H).data;
+    return (lat, lon) => {
+      const x = Math.min(W - 1, Math.max(0, Math.floor(((lon + 180) / 360) * W)));
+      const y = Math.min(H - 1, Math.max(0, Math.floor(((90 - lat) / 180) * H)));
+      return data[(y * W + x) * 4 + 3] > 128;
+    };
+  }
+
+  function initGlobe(canvas) {
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const toVec = (lat, lon) => [Math.cos(lat * D2R) * Math.sin(lon * D2R), Math.sin(lat * D2R), Math.cos(lat * D2R) * Math.cos(lon * D2R)];
+    const home = toVec(HOME.lat, HOME.lon);
+    const BASE_YAW = -HOME.lon * D2R, BASE_TILT = 0.28; // tip the north a little toward the viewer
+
+    let w = 0, h = 0, R = 0, cx = 0, cy = 0;
+    let land = [], ocean = [], ready = false, visible = true, alpha = 0;
+    let arcs = [], rings = [], blocked = 0, lastSpawn = 0;
+    // drag state: offsets added to the idle sway, with momentum and a spring back home
+    let dragYaw = 0, dragTilt = 0, velYaw = 0, dragging = false, lastX = 0, lastY = 0, lastT = 0;
+    let yaw = BASE_YAW, tilt = BASE_TILT;
+
+    function size() {
+      const r = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = r.width; h = r.height;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      R = Math.min(w, h) * 0.38;
+      cx = w / 2; cy = h / 2;
+    }
+
+    function build(isLand) {
+      const N = w < 420 ? 9000 : 16000;
+      const golden = Math.PI * (3 - Math.sqrt(5));
+      land = []; ocean = [];
+      for (let i = 0; i < N; i++) {
+        const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), t = golden * i;
+        const p = [Math.cos(t) * r, y, Math.sin(t) * r];
+        if (!isLand) { if (i % 3 === 0) land.push(p); continue; } // fallback: plain dotted sphere
+        const lat = Math.asin(y) / D2R, lon = Math.atan2(p[0], p[2]) / D2R;
+        if (isLand(lat, lon)) land.push(p);
+        else if (i % 5 === 0) ocean.push(p);
+      }
+      ready = true;
+    }
+
+    // world → screen (x, y, depth); depth > 0 faces the viewer
+    function project(p, rot) {
+      const [cY, sY, cX, sX] = rot;
+      const x1 = p[0] * cY + p[2] * sY;
+      const z1 = -p[0] * sY + p[2] * cY;
+      const y2 = p[1] * cX - z1 * sX;
+      const z2 = p[1] * sX + z1 * cX;
+      return [cx + x1 * R, cy - y2 * R, z2];
+    }
+
+    function slerp(a, b, t) {
+      const d = Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
+      const om = Math.acos(d), so = Math.sin(om) || 1;
+      const k1 = Math.sin((1 - t) * om) / so, k2 = Math.sin(t * om) / so;
+      const lift = 1 + Math.sin(Math.PI * t) * Math.min(0.35, om * 0.24);
+      return [(a[0] * k1 + b[0] * k2) * lift, (a[1] * k1 + b[1] * k2) * lift, (a[2] * k1 + b[2] * k2) * lift];
+    }
+
+    function spawn(rot) {
+      for (let tries = 0; tries < 30; tries++) {
+        const p = land[(Math.random() * land.length) | 0];
+        if (!p) return;
+        if (p[0] * home[0] + p[1] * home[1] + p[2] * home[2] > 0.93) continue; // too close to home
+        if (project(p, rot)[2] < 0.15) continue;                                 // start on the visible side
+        arcs.push({ a: p, t: 0, sp: 0.006 + Math.random() * 0.006 });
+        return;
+      }
+    }
+
+    function dots(list, rot, front, back, r) {
+      ctx.fillStyle = front;
+      ctx.beginPath();
+      const behind = [];
+      for (const p of list) {
+        const s = project(p, rot);
+        if (s[2] > 0) { ctx.moveTo(s[0] + r, s[1]); ctx.arc(s[0], s[1], r, 0, Math.PI * 2); }
+        else if (back) behind.push(s);
+      }
+      ctx.fill();
+      if (back && behind.length) {
+        ctx.fillStyle = back;
+        ctx.beginPath();
+        for (const s of behind) { ctx.moveTo(s[0] + r * 0.7, s[1]); ctx.arc(s[0], s[1], r * 0.7, 0, Math.PI * 2); }
+        ctx.fill();
+      }
+    }
+
+    function draw(now) {
+      const ac = colors.accent, al = colors.alert;
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalAlpha = alpha;
+      const rot = [Math.cos(yaw), Math.sin(yaw), Math.cos(tilt), Math.sin(tilt)];
+      const dotR = Math.max(0.9, R / 190);
+
+      // atmosphere + body
+      const atm = ctx.createRadialGradient(cx, cy, R * 0.9, cx, cy, R * 1.35);
+      atm.addColorStop(0, rgba(ac, 0.16)); atm.addColorStop(0.35, rgba(ac, 0.05)); atm.addColorStop(1, rgba(ac, 0));
+      ctx.fillStyle = atm; ctx.fillRect(0, 0, w, h);
+
+      // land on the far side, faintly, for depth (drawn before the body so the body dims it)
+      dots(land, rot, "rgba(0,0,0,0)", "rgba(138,151,165,0.10)", dotR);
+      const body = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.45, R * 0.1, cx, cy, R);
+      body.addColorStop(0, "rgba(19,26,34,0.92)"); body.addColorStop(1, "rgba(7,9,12,0.94)");
+      ctx.fillStyle = body;
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+
+      // HUD ring of ticks, turning with the globe
+      ctx.strokeStyle = rgba(ac, 0.22); ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 0; i < 72; i++) {
+        const a = i * 5 * D2R + yaw * 0.5, major = i % 6 === 0;
+        const r1 = R * 1.14, r2 = R * (major ? 1.2 : 1.17);
+        ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+        ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
+      }
+      ctx.stroke();
+
+      // near side: ocean texture, then land by depth
+      dots(ocean, rot, "rgba(138,151,165,0.12)", null, dotR * 0.8);
+      const buckets = [[], [], [], []];
+      for (const p of land) {
+        const s = project(p, rot);
+        if (s[2] <= 0.02) continue;
+        buckets[Math.min(3, Math.floor(s[2] * 4))].push(s[0], s[1]);
+      }
+      buckets.forEach((b, i) => {
+        ctx.fillStyle = `rgba(214,222,230,${0.18 + i * 0.18})`;
+        const r = dotR * (0.75 + i * 0.2);
+        ctx.beginPath();
+        for (let j = 0; j < b.length; j += 2) { ctx.moveTo(b[j] + r, b[j + 1]); ctx.arc(b[j], b[j + 1], r, 0, Math.PI * 2); }
+        ctx.fill();
+      });
+
+      // rim
+      ctx.save();
+      ctx.shadowColor = rgba(ac, 0.8); ctx.shadowBlur = 18;
+      ctx.strokeStyle = rgba(ac, 0.55); ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+
+      // attack arcs (only the parts on the visible side)
+      const hs = project(home, rot);
+      for (const a of arcs) {
+        const head = a.t, tail = Math.max(0, head - 0.32), STEPS = 16;
+        let prev = null;
+        for (let k = 0; k <= STEPS; k++) {
+          const s = project(slerp(a.a, home, tail + ((head - tail) * k) / STEPS), rot);
+          if (prev && s[2] > 0 && prev[2] > 0) {
+            ctx.strokeStyle = rgba(al, (k / STEPS) * 0.85);
+            ctx.lineWidth = 0.6 + (k / STEPS) * 1.2;
+            ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(s[0], s[1]); ctx.stroke();
+          }
+          prev = s;
+        }
+        if (prev && prev[2] > 0) { ctx.fillStyle = rgba(al, 1); ctx.beginPath(); ctx.arc(prev[0], prev[1], 1.8, 0, Math.PI * 2); ctx.fill(); }
+        const o = project(a.a, rot);
+        if (o[2] > 0 && a.t < 0.5) {
+          ctx.strokeStyle = rgba(al, 0.6 * (1 - a.t * 2));
+          ctx.beginPath(); ctx.arc(o[0], o[1], 2 + a.t * 10, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+
+      // shield impacts + home pin + label
+      if (hs[2] > 0) {
+        for (const r of rings) {
+          const k = r.life / 50;
+          ctx.strokeStyle = rgba(ac, k * 0.9); ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(hs[0], hs[1], 10 + (1 - k) * 26, 0, Math.PI * 2); ctx.stroke();
+        }
+        const pulse = 0.5 + 0.5 * Math.sin(now / 320);
+        ctx.fillStyle = rgba(ac, 0.18 + pulse * 0.12);
+        ctx.beginPath(); ctx.arc(hs[0], hs[1], 9 + pulse * 3, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = rgba(ac, 0.9); ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(hs[0], hs[1], 9, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = rgba(ac, 1);
+        ctx.beginPath(); ctx.arc(hs[0], hs[1], 3, 0, Math.PI * 2); ctx.fill();
+
+        // label below the pin; flip to the left side if it would leave the canvas
+        const text2 = `${HOME.coords} · ${String(blocked).padStart(3, "0")} blocked`;
+        ctx.font = "500 9.5px 'JetBrains Mono', monospace";
+        const tw = Math.max(ctx.measureText(text2).width, 90);
+        const right = hs[0] + 24 + tw < w - 4;
+        const lx = right ? hs[0] + 24 : hs[0] - 24 - tw, ly = hs[1] + 22;
+        ctx.strokeStyle = rgba(ac, 0.6); ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(hs[0] + (right ? 7 : -7), hs[1] + 7);
+        ctx.lineTo(right ? lx - 4 : lx + tw + 4, ly - 4);
+        ctx.lineTo(right ? lx + tw : lx, ly - 4);
+        ctx.stroke();
+        ctx.font = "600 10.5px 'JetBrains Mono', monospace";
+        ctx.fillStyle = rgba(ac, 1);
+        ctx.fillText(HOME.label, lx, ly + 10);
+        ctx.font = "500 9.5px 'JetBrains Mono', monospace";
+        ctx.fillStyle = "rgba(138,151,165,0.95)";
+        ctx.fillText(text2, lx, ly + 26);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function step(now) {
+      requestAnimationFrame(step);
+      if (!visible || document.hidden || !ready) return;
+      alpha = Math.min(1, alpha + 0.02);
+      if (!dragging) {
+        dragYaw += velYaw; velYaw *= 0.94;                   // momentum after a flick
+        if (Math.abs(velYaw) < 0.0005) {                     // then ease back to Sri Lanka
+          dragYaw *= 0.97; dragTilt *= 0.95;
+        }
+      }
+      yaw = BASE_YAW + Math.sin(now / 7000) * 0.35 + dragYaw;
+      tilt = BASE_TILT + dragTilt;
+
+      const rot = [Math.cos(yaw), Math.sin(yaw), Math.cos(tilt), Math.sin(tilt)];
+      if (now - lastSpawn > 480 && arcs.length < 10) { spawn(rot); lastSpawn = now; }
+      for (let i = arcs.length - 1; i >= 0; i--) {
+        arcs[i].t += arcs[i].sp;
+        if (arcs[i].t >= 1) { arcs.splice(i, 1); rings.push({ life: 50 }); blocked++; }
+      }
+      for (let i = rings.length - 1; i >= 0; i--) if (--rings[i].life <= 0) rings.splice(i, 1);
+      draw(now);
+    }
+
+    /* drag to spin (mouse and touch; vertical swipes still scroll the page) */
+    canvas.addEventListener("pointerdown", (e) => {
+      dragging = true; velYaw = 0;
+      lastX = e.clientX; lastY = e.clientY; lastT = performance.now();
+      canvas.setPointerCapture(e.pointerId);
+      canvas.classList.add("is-dragging");
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const now = performance.now(), dx = e.clientX - lastX, dy = e.clientY - lastY;
+      const dYaw = dx * (Math.PI / Math.max(200, R * 2.2));
+      dragYaw += dYaw;
+      dragTilt = Math.max(-0.6, Math.min(0.6, dragTilt + dy * 0.004));
+      velYaw = dYaw / Math.max(1, now - lastT) * 16;
+      lastX = e.clientX; lastY = e.clientY; lastT = now;
+      if (reduced) { yaw = BASE_YAW + dragYaw; tilt = BASE_TILT + dragTilt; draw(0); }
+    });
+    const end = () => { dragging = false; canvas.classList.remove("is-dragging"); };
+    canvas.addEventListener("pointerup", end);
+    canvas.addEventListener("pointercancel", end);
+
+    readColors();
+    size();
+    new ResizeObserver(() => { size(); if (ready && reduced) draw(0); }).observe(canvas);
+    new IntersectionObserver(([en]) => { visible = en.isIntersecting; }).observe(canvas);
+
+    const start = (isLand) => {
+      build(isLand);
+      if (reduced) { alpha = 1; draw(0); }
+      else requestAnimationFrame(step);
+    };
+    // real continents when the data loads; otherwise a plain dotted sphere
+    loadLandMask().then(start).catch(() => start(null));
+  }
+
+  /* ---------------------------------------------------------------
      MIRAI SIMULATION
      --------------------------------------------------------------- */
   function initMirai(opts) {
@@ -441,6 +753,7 @@ window.JDFX = (() => {
 
   return {
     initHero,
+    initGlobe,
     initMirai,
     topology,
     refreshColors: readColors

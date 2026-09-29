@@ -8,7 +8,7 @@
   <meta name="author" content="Janith Deshan">
   <meta name="theme-color" content="#0A0D12">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.github.com https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-src 'none'">
 
   <meta property="og:type" content="website">
   <meta property="og:title" content="The Lab | Janith Deshan">
@@ -33,13 +33,10 @@
       <span class="dot" aria-hidden="true"></span><span class="bar__name">Janith Deshan</span>
     </a>
     <nav class="bar__nav" aria-label="Sections">
-      <a href="index.html#whoami">whoami</a>
-      <a href="index.html#arsenal">arsenal</a>
-      <a href="index.html#cases">cases</a>
-      <a href="index.html#research">research</a>
-      <a href="index.html#intel">intel</a>
-      <a href="index.html#contact">contact</a>
-      <a href="lab.html" class="bar__lab is-active" aria-current="page">lab ↗</a>
+      <a href="#ctf">ctf</a>
+      <a href="#terminal">shell</a>
+      <a href="#security">security</a>
+      <a href="index.html" class="bar__lab">← home</a>
     </nav>
     <div class="bar__right">
       <div class="mode-switch" role="group" aria-label="Team mode">
@@ -58,17 +55,21 @@
   <main id="main">
     <!-- ========== LAB HERO ========== -->
     <section class="lab-hero" id="top" data-label="~/lab">
-      <canvas id="net" class="hero__net" aria-hidden="true"></canvas>
-      <div class="container lab-hero__inner">
-        <p class="hero__tag mono"><span class="blink-dot" aria-hidden="true"></span>SANDBOX · AUTHORIZED TESTING ONLY</p>
-        <h1 class="lab-hero__title">The <span class="outline">Lab</span><span class="accent">.</span></h1>
-        <p class="hero__lede">A small cyber range built into my portfolio. Hunt the six hidden flags, poke around a real shell, and see how this site is secured.</p>
-        <div class="lab-zones">
-          <a class="panel lab-zone" href="#ctf"><span class="lab-zone__n mono">01</span><b>Capture the flag</b><span class="lab-zone__d">6 hidden flags · hints · scoreboard</span><span class="lab-zone__meta mono" id="zone-flags">0 / 6 captured</span></a>
-          <a class="panel lab-zone" href="#terminal"><span class="lab-zone__n mono">02</span><b>Shell</b><span class="lab-zone__d">jdsh, a real terminal in your browser</span><span class="lab-zone__meta mono">type <code>help</code></span></a>
-          <a class="panel lab-zone" href="#security"><span class="lab-zone__n mono">03</span><b>Site security</b><span class="lab-zone__d">How this site is hardened, and its known limits</span><span class="lab-zone__meta mono">self-audit</span></a>
+      <div class="container lab-hero__grid">
+        <div class="lab-hero__copy">
+          <p class="hero__tag mono"><span class="blink-dot" aria-hidden="true"></span>SANDBOX · AUTHORIZED TESTING ONLY</p>
+          <h1 class="lab-hero__title">The <span class="outline">Lab</span><span class="accent">.</span></h1>
+          <p class="hero__lede">A small cyber range built into my portfolio. Hunt the six hidden flags, poke around a real shell, and see how this site is secured.</p>
+          <div class="hero__cta">
+            <a class="btn btn--primary" href="#ctf">Start hunting <span aria-hidden="true">→</span></a>
+            <a class="btn" href="#terminal">Open shell <kbd>`</kbd></a>
+          </div>
+          <p class="lab-hero__status mono"><span class="blink-dot" aria-hidden="true"></span><span class="dim">flags</span> <b id="zone-flags">0 / 6 captured</b></p>
         </div>
-        <p class="lab-hero__back mono"><a href="index.html">← back to the portfolio</a></p>
+        <figure class="lab-hero__globe">
+          <canvas id="globe" role="img" aria-label="Rotating globe showing simulated attacks against Homagama, Sri Lanka, being blocked. Drag to spin."></canvas>
+          <figcaption class="mono">drag to spin · simulated traffic</figcaption>
+        </figure>
       </div>
     </section>
 
@@ -240,6 +241,7 @@
   <script defer src="https://unpkg.com/lenis@1.3.4/dist/lenis.min.js" integrity="sha384-FKTX0CNJ8ngN1oGMBReVu7mvjTJyjFiD5etb1NKnYxc+8eFI2O0KWnksTN+oTFcu" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js" integrity="sha384-M169f14mRZOXm3hD/v2Ti0ThIT/RnAQagXA9nlE15yHAtrW19gdePJh/HaTzUOe/" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js" integrity="sha384-iF+jqbuti4XlB64clWgFWYEscb+UnSRv3VgVikGYZu+otNFnSHr7y7NcKfBnGizn" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
   <script defer src="js/data.js"></script>
   <script defer src="js/fx.js"></script>
   <script defer src="js/ctf.js"></script>
