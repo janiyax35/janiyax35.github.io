@@ -9,7 +9,7 @@ window.JDCTF = (() => {
   "use strict";
 
   const FLAGS = [
-    { id: 1, name: "Source Code", diff: "easy", hint: "Recon starts with the page source. Try Ctrl+U.", hash: "4d564de9a21e416c2ac5c6e09cf677b51fe79c879c96b647b72ff1f2ffb442fd" },
+    { id: 1, name: "Source Code", diff: "easy", hint: "Recon starts with the page source of the home page. Try Ctrl+U.", hash: "4d564de9a21e416c2ac5c6e09cf677b51fe79c879c96b647b72ff1f2ffb442fd" },
     { id: 2, name: "Forbidden Path", diff: "easy", hint: "Search engines get told where not to look, and attackers read those rules too.", hash: "329950c981f23a8e2c371ca79d0c52f6b218082d9eaa219bd4f186680cca48a9" },
     { id: 3, name: "Dev Channel", diff: "easy", hint: "Developers leave messages where developers look (F12). Base64 is encoding, not encryption.", hash: "f28557d07ebed9e4250a431a1db42ab4b9aea7e341f8f3b575d5f1d0ed24a698" },
     { id: 4, name: "Broken Access", diff: "med", hint: "Your role on this site is decided by something your browser stores, and you control your browser.", hash: "a98a5633261d01a9dda5e20ff81f19e3126b35268e453e360d7d5e0d2cc41841" },

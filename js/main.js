@@ -1,5 +1,6 @@
 /* =====================================================================
-   JD//OPS · main controller
+   JD//OPS · main controller (shared by index.html and lab.html)
+   Each feature checks that its elements exist on the current page.
    ===================================================================== */
 
 (() => {
@@ -10,9 +11,12 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const html = document.documentElement;
+  const PAGE = document.body.dataset.page || "home";
+  const OTHER = PAGE === "home" ? "lab.html" : "index.html";
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
   const ext = 'target="_blank" rel="noopener noreferrer"';
+  const fill = (sel, markup) => { const el = $(sel); if (el) el.innerHTML = markup; return el; };
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
@@ -26,53 +30,27 @@
   if (animate) html.classList.add("anim");
 
   /* ================================================================
-     RENDER
+     RENDER (home page content)
      ================================================================ */
   function render() {
-    // hero scan
-    $("#scan-table").insertAdjacentHTML("beforeend", D.scan.map((r) =>
-      `<div class="scan__row is-hidden" role="row"><span role="cell">${esc(r.p)}</span><span role="cell" class="s">${esc(r.s)}</span><span role="cell">${esc(r.svc)}</span><span role="cell" class="v">${esc(r.v)}</span></div>`
-    ).join(""));
-    $("#scan-status").textContent = P.status.toLowerCase().startsWith("open") ? "open to opportunities" : "online";
-    $("#id-status").textContent = P.status;
+    const idStatus = $("#id-status");
+    if (idStatus) idStatus.textContent = P.status;
 
     // ticker (duplicated for seamless loop)
     const t = D.ticker.map(([lv, m]) => `<span class="ticker__item"><b class="lv-${lv}">[${lv.toUpperCase()}]</b>${esc(m)}</span>`).join("");
-    $("#ticker").innerHTML = t + t;
+    fill("#ticker", t + t);
 
-    // principles
-    $("#principles").innerHTML = D.principles.map((p) =>
-      `<div class="principle"><span class="principle__k">${esc(p.k)}</span><h3>${esc(p.t)}</h3><p>${esc(p.d)}</p></div>`).join("");
+    fill("#principles", D.principles.map((p) =>
+      `<div class="principle"><span class="principle__k">${esc(p.k)}</span><h3>${esc(p.t)}</h3><p>${esc(p.d)}</p></div>`).join(""));
 
-    // arsenal
-    $("#arsenal-grid").innerHTML = D.skills.map((g, i) => `
+    fill("#arsenal-grid", D.skills.map((g, i) => `
       <div class="panel skill-group${g.wide ? " skill-group--wide" : ""}" data-reveal>
         <div class="panel__head"><span>[${String(i + 1).padStart(2, "0")}] ${esc(g.title)}</span><span>${g.items.length} mod</span></div>
         <div class="panel__body">${g.items.map((s) => `<span class="chip"${s.team ? ` data-team="${s.team}"` : ""}>${esc(s.n)}</span>`).join("")}</div>
         ${g.wide ? `<div class="skill-legend"><span><i style="background:var(--red)"></i>offensive</span><span><i style="background:var(--cyan)"></i>defensive</span><span><i style="background:linear-gradient(90deg,var(--red) 50%,var(--cyan) 50%)"></i>both</span></div>` : ""}
-      </div>`).join("");
+      </div>`).join(""));
 
-    // kill chain
-    const K = D.killchain, p2 = (i) => String(i).padStart(2, "0");
-    const tools = (arr) => arr.map((t) => `<span class="chip">${esc(t)}</span>`).join("");
-    $("#kc-rail").insertAdjacentHTML("beforeend", K.map((s, i) =>
-      `<li class="kc__node" data-i="${i}"><button type="button" aria-label="Stage ${i + 1}: ${esc(s.n)}"><span class="kc__dot">${p2(i + 1)}</span><span class="kc__name">${esc(s.n)}<small>${esc(s.short)}</small></span></button></li>`).join(""));
-    $("#kc-stages").innerHTML = K.map((s, i) => `
-      <article class="panel kc-stage" data-i="${i}">
-        <div class="panel__head"><span>stage <b class="accent">${p2(i + 1)}</b> / ${p2(K.length)}</span><span>ATT&amp;CK · ${esc(s.attack)}</span></div>
-        <div class="panel__body">
-          <span class="kc-stage__num" aria-hidden="true">${p2(i + 1)}</span>
-          <h3 class="kc-stage__title">${esc(s.n)}</h3>
-          <p class="kc-stage__sum">${esc(s.sum)}</p>
-          <div class="kc-duel">
-            <div class="kc-side kc-side--atk" data-team="red"><span class="kc-side__label">▲ attack</span><p>${esc(s.atk)}</p><div class="kc-side__tools">${tools(s.atkTools)}</div></div>
-            <div class="kc-side kc-side--def" data-team="blue"><span class="kc-side__label">■ defend</span><p>${esc(s.def)}</p><div class="kc-side__tools">${tools(s.defTools)}</div></div>
-          </div>
-        </div>
-      </article>`).join("");
-
-    // case files
-    $("#cases-grid").innerHTML = D.projects.map((p) => `
+    fill("#cases-grid", D.projects.map((p) => `
       <article class="panel case${p.featured ? " case--featured" : ""}" data-slug="${p.slug}"${p.team ? ` data-team="${p.team}"` : ""} data-reveal>
         <div class="case__top"><span class="case__id">${esc(p.id)}</span><span>${esc(p.type)}</span></div>
         <div class="case__body">
@@ -85,36 +63,38 @@
           <button type="button" class="btn btn--primary" data-case="${p.slug}">Open file</button>
           <a class="btn" href="${esc(p.repo)}" ${ext}>Repo ↗</a>
         </div>
-      </article>`).join("");
-    $("#extras").innerHTML = D.extraProjects.map((x) =>
-      `<div class="extra"><b>${esc(x.t)}</b><span>${esc(x.s)}</span><p style="margin:0">${esc(x.d)}</p></div>`).join("");
+      </article>`).join(""));
+    fill("#extras", D.extraProjects.map((x) =>
+      `<div class="extra"><b>${esc(x.t)}</b><span>${esc(x.s)}</span><p style="margin:0">${esc(x.d)}</p></div>`).join(""));
 
-    // research
     const R = D.research;
-    $("#paper-title").textContent = R.title;
-    $("#paper-meta").textContent = R.meta;
-    $("#paper-points").innerHTML = R.points.map((p) => `<li>${esc(p)}</li>`).join("");
-    $("#paper-era").innerHTML = R.era.map((e) => `<li><div class="era__y">${esc(e.y)}</div><p class="era__t">${esc(e.t)}</p><p class="era__d">${esc(e.d)}</p></li>`).join("");
-    $("#threats").innerHTML = R.threats.map((t, i) =>
-      `<div class="threat" data-reveal><span class="threat__n">T-0${i + 1}</span><h4>${esc(t.n)}</h4><p>${esc(t.d)}</p></div>`).join("");
+    if ($("#paper-title")) {
+      $("#paper-title").textContent = R.title;
+      $("#paper-meta").textContent = R.meta;
+    }
+    fill("#paper-points", R.points.map((p) => `<li>${esc(p)}</li>`).join(""));
+    fill("#paper-era", R.era.map((e) => `<li><div class="era__y">${esc(e.y)}</div><p class="era__t">${esc(e.t)}</p><p class="era__d">${esc(e.d)}</p></li>`).join(""));
+    fill("#threats", R.threats.map((t, i) =>
+      `<div class="threat" data-reveal><span class="threat__n">T-0${i + 1}</span><h4>${esc(t.n)}</h4><p>${esc(t.d)}</p></div>`).join(""));
 
-    // intel
-    $("#thm-stats").innerHTML = D.thm.stats.map((s) =>
-      `<div class="stat" data-reveal><span class="stat__src">THM</span><div class="stat__v">${s.pre ? `<small>${esc(s.pre)}</small>` : ""}<span data-count="${s.v}">${s.v}</span>${s.suf ? `<small>${esc(s.suf)}</small>` : ""}</div><div class="stat__l">${esc(s.l)}</div></div>`).join("");
-    $("#thm-paths").innerHTML = D.thm.paths.map((p) =>
-      `<li><span class="st st--${p.s}">${p.s === "done" ? "✓" : "◌"}</span><span class="grow">${esc(p.n)}</span><span class="meta">${esc(p.d)}</span></li>`).join("");
-    if (P.tryhackme) { const a = $("#thm-link"); a.href = P.tryhackme; a.hidden = false; }
-    $("#certs").innerHTML = D.certs.map((c) =>
-      `<li><span class="st st--${c.s} mono">${c.s === "done" ? "✓" : "◌"}</span><span class="grow">${esc(c.t)}<span class="sub">${esc(c.o)}</span></span></li>`).join("");
-    $("#cert-count").textContent = `${D.certs.filter((c) => c.s === "done").length} done · ${D.certs.filter((c) => c.s !== "done").length} in progress`;
-    $("#gitlog").innerHTML = D.log.map((l) => `
+    fill("#thm-stats", D.thm.stats.map((s) =>
+      `<div class="stat" data-reveal><span class="stat__src">THM</span><div class="stat__v">${s.pre ? `<small>${esc(s.pre)}</small>` : ""}<span data-count="${s.v}">${s.v}</span>${s.suf ? `<small>${esc(s.suf)}</small>` : ""}</div><div class="stat__l">${esc(s.l)}</div></div>`).join(""));
+    fill("#thm-paths", D.thm.paths.map((p) =>
+      `<li><span class="st st--${p.s}">${p.s === "done" ? "✓" : "◌"}</span><span class="grow">${esc(p.n)}</span><span class="meta">${esc(p.d)}</span></li>`).join(""));
+    const thm = $("#thm-link");
+    if (thm && P.tryhackme) { thm.href = P.tryhackme; thm.hidden = false; }
+    fill("#certs", D.certs.map((c) =>
+      `<li><span class="st st--${c.s} mono">${c.s === "done" ? "✓" : "◌"}</span><span class="grow">${esc(c.t)}<span class="sub">${esc(c.o)}</span></span></li>`).join(""));
+    const cc = $("#cert-count");
+    if (cc) cc.textContent = `${D.certs.filter((c) => c.s === "done").length} done · ${D.certs.filter((c) => c.s !== "done").length} in progress`;
+    fill("#gitlog", D.log.map((l) => `
       <div class="commit">
         <div class="commit__graph"></div>
         <div class="commit__body">
           <div class="commit__line"><span class="commit__hash">${esc(l.h)}</span>${l.ref ? `<span class="commit__ref">${esc(l.ref)}</span>` : ""}<span class="commit__date">${esc(l.d)}</span></div>
           <p class="commit__msg"><span class="commit__type">${esc(l.type)}:</span> ${esc(l.m)}</p>
         </div>
-      </div>`).join("");
+      </div>`).join(""));
   }
 
   /* ================================================================
@@ -129,10 +109,11 @@
   }
 
   /* ================================================================
-     BOOT
+     BOOT (home page only)
      ================================================================ */
   function boot() {
     const el = $("#boot");
+    if (!el) return Promise.resolve();
     let seen = false;
     try { seen = sessionStorage.getItem("jd.booted"); } catch (e) { /* ignore */ }
     if (seen || reduced) { el.remove(); return Promise.resolve(); }
@@ -169,24 +150,22 @@
      HERO
      ================================================================ */
   function heroIntro() {
-    const rows = $$("#scan-table .scan__row.is-hidden");
-    const state = $("#scan-state");
-    const revealRows = () => {
-      rows.forEach((r, i) => setTimeout(() => r.classList.remove("is-hidden"), reduced ? 0 : 500 + i * 220));
-      setTimeout(() => { state.textContent = "scan complete"; state.classList.add("is-done"); }, reduced ? 0 : 600 + rows.length * 220);
-    };
+    if (PAGE === "lab") {
+      if (animate) gsap.from(".lab-hero__inner > *", { y: 22, opacity: 0, duration: 0.9, stagger: 0.08, ease: "power3.out" });
+      return;
+    }
     if (animate) {
       const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
       tl.from(".hero__line > span", { yPercent: 110, duration: 1.1, stagger: 0.12 })
         .from(".hero__tag, .hero__role, .hero__lede, .hero__cta", { y: 18, opacity: 0, duration: 0.8, stagger: 0.08 }, "-=.7")
-        .from(".scan", { x: 30, opacity: 0, duration: 0.9 }, "-=.8")
+        .from(".term--hero", { x: 30, opacity: 0, duration: 0.9 }, "-=.8")
         .from(".ticker", { opacity: 0, duration: 0.8 }, "-=.5");
       if (hasScramble) tl.to("#hero-tag", { duration: 1.2, scrambleText: { text: "SECURE SESSION ESTABLISHED · TLS 1.3", chars: "01<>/#%&", speed: 0.5 } }, 0.2);
     }
-    revealRows();
 
     // rotating role
     const role = $("#role");
+    if (!role) return;
     let ri = 0;
     setInterval(() => {
       if (document.hidden) return;
@@ -205,8 +184,10 @@
     store.set("jd.mode", m);
     $$(".mode-switch button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
     const tag = $("#tagline");
-    if (hasScramble && !reduced && !silent) gsap.to(tag, { duration: 1, scrambleText: { text: D.modes[m].tagline, chars: "lowerCase", speed: 0.8 } });
-    else tag.textContent = D.modes[m].tagline;
+    if (tag) {
+      if (hasScramble && !reduced && !silent) gsap.to(tag, { duration: 1, scrambleText: { text: D.modes[m].tagline, chars: "lowerCase", speed: 0.8 } });
+      else tag.textContent = D.modes[m].tagline;
+    }
     sortCases(m);
     window.JDFX && window.JDFX.refreshColors();
     window.JDTerm && window.JDTerm.refreshTheme();
@@ -238,11 +219,13 @@
       requestAnimationFrame(raf);
     }
   }
+
+  // Scroll to a section on this page, or open the other page at that section.
   function goto(id) {
+    if (id === "lab") { location.href = "lab.html"; return; }
     const t = id === "top" ? $("#top") : document.getElementById(id);
-    if (!t) return;
+    if (!t) { location.href = OTHER + (id === "top" ? "" : "#" + id); return; }
     const off = id === "top" ? 0 : -($("#bar").offsetHeight + 8);
-    // absolute target from the real scroll position (stays correct with pinned sections)
     const y = Math.max(0, t.getBoundingClientRect().top + window.scrollY + off);
     if (lenis) lenis.scrollTo(y, { duration: 1.2 });
     else t.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
@@ -250,7 +233,7 @@
   }
 
   function reveals() {
-    if (!animate || !hasST) return;
+    if (!animate) return;
     ScrollTrigger.batch("[data-reveal]", {
       start: "top 90%",
       once: true,
@@ -282,7 +265,6 @@
         onEnter: () => gsap.to(o, { v: to, duration: 1.6, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(o.v); } })
       });
     });
-    // refresh once fonts settle so trigger positions are right
     document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
   }
 
@@ -299,7 +281,6 @@
     arc.style.strokeDasharray = C;
     arc.style.strokeDashoffset = C;
 
-    // 60 ticks, every 5th one longer
     let t = "";
     for (let i = 0; i < 60; i++) {
       const a = (i / 60) * Math.PI * 2, s = Math.sin(a), c = Math.cos(a);
@@ -310,12 +291,11 @@
 
     const sections = $$("main > section[id]").map((el) => ({
       el,
-      name: el.id === "top" ? "~/home" : (el.querySelector("h2") ? el.querySelector("h2").textContent.trim() : "~/" + el.id)
+      name: el.dataset.label || (el.querySelector("h2") ? el.querySelector("h2").textContent.trim() : "~/" + el.id)
     }));
     let blips = [], cur = -1, last = -1, raf = 0;
     const maxScroll = () => Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
 
-    // one blip per section, placed where the needle will be when that section becomes current
     function layout() {
       const max = maxScroll();
       blipsEl.innerHTML = sections.map((s) => {
@@ -357,79 +337,15 @@
     let rt;
     const relayout = () => { clearTimeout(rt); rt = setTimeout(layout, 150); };
     addEventListener("resize", relayout);
-    new ResizeObserver(relayout).observe($("#main")); // late content (GitHub feed, fonts, pins) changes page height
+    new ResizeObserver(relayout).observe($("#main"));
     if (hasST) ScrollTrigger.addEventListener("refresh", relayout);
     btn.addEventListener("click", () => goto("top"));
     layout();
   }
 
-  /* ---------- kill chain: pinned, one stage per scroll step ---------- */
-  function killChain() {
-    const sec = $("#killchain");
-    if (!sec || !animate) return; // static stacked layout
-    const nodes = $$(".kc__node", sec), stages = $$(".kc-stage", sec), n = stages.length;
-    const fill = $("#kc-fill"), packet = $("#kc-packet"), hint = $("#kc-hint");
-    let cur = -1;
-
-    function setStage(i) {
-      if (i === cur) return;
-      cur = i;
-      nodes.forEach((nd, j) => {
-        nd.classList.toggle("is-active", j === i);
-        nd.classList.toggle("is-past", j < i);
-        nd.firstElementChild.setAttribute("aria-current", j === i ? "step" : "false");
-      });
-      stages.forEach((st, j) => {
-        st.classList.toggle("is-active", j === i);
-        st.setAttribute("aria-hidden", String(j !== i));
-      });
-      if (hasScramble) {
-        gsap.to(stages[i].querySelector(".kc-stage__title"), { duration: 0.6, scrambleText: { text: D.killchain[i].n, chars: "01<>/#_", speed: 0.9 } });
-      }
-    }
-    function setProgress(p) {
-      // packet sits exactly on node i at the middle of stage i's scroll range
-      const pos = Math.min(1, Math.max(0, (p * n - 0.5) / (n - 1))) * 100;
-      fill.style.height = pos + "%";
-      packet.style.top = pos + "%";
-      hint.classList.toggle("is-done", p > 0.97);
-    }
-
-    gsap.matchMedia().add("(min-width: 900px) and (min-height: 700px)", () => {
-      sec.classList.add("is-pinned");
-      setStage(0);
-      setProgress(0);
-      const st = ScrollTrigger.create({
-        trigger: "#kc-pin",
-        start: "top top",
-        end: () => "+=" + window.innerHeight * (n - 1) * 0.55,
-        pin: true,
-        anticipatePin: 1,
-        onUpdate: (self) => {
-          setProgress(self.progress);
-          setStage(Math.min(n - 1, Math.floor(self.progress * n)));
-        }
-      });
-      const handlers = nodes.map((nd, i) => {
-        const fn = () => {
-          const y = st.start + (st.end - st.start) * ((i + 0.5) / n);
-          if (lenis) lenis.scrollTo(y, { duration: 1 });
-          else window.scrollTo({ top: y, behavior: "smooth" });
-        };
-        nd.firstElementChild.addEventListener("click", fn);
-        return [nd.firstElementChild, fn];
-      });
-      return () => {
-        sec.classList.remove("is-pinned");
-        handlers.forEach(([b, fn]) => b.removeEventListener("click", fn));
-        stages.forEach((s) => { s.classList.remove("is-active"); s.removeAttribute("aria-hidden"); });
-        cur = -1;
-      };
-    });
-  }
-
   function navSpy() {
-    const links = $$(".bar__nav a");
+    const links = $$(".bar__nav a").filter((a) => a.getAttribute("href").startsWith("#"));
+    if (!links.length) return;
     const map = new Map(links.map((a) => [a.getAttribute("href").slice(1), a]));
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => {
@@ -445,7 +361,7 @@
      DIALOGS
      ================================================================ */
   function openDialog(d) {
-    if (d.open) return;
+    if (!d || d.open) return;
     d.showModal();
     lenis && lenis.stop();
   }
@@ -525,9 +441,16 @@
   }
 
   /* ---------- command palette ---------- */
+  const NAV = [
+    ["top", PAGE === "home" ? "Home" : "Top of The Lab"],
+    ["whoami", "~/whoami"], ["arsenal", "~/arsenal · skills"], ["cases", "~/case-files · projects"],
+    ["research", "~/research · IoT & Mirai"], ["intel", "~/intel · THM, certs, timeline"], ["contact", "~/contact"],
+    ["ctf", "The Lab › ~/ctf · capture the flag"], ["terminal", "The Lab › ~/shell"], ["security", "The Lab › ~/site-security"]
+  ].filter(([id]) => !(PAGE === "home" && id === "terminal")); // the home shell lives in the hero
   const ACTIONS = [
-    ...[["top", "Home"], ["whoami", "~/whoami"], ["arsenal", "~/arsenal · skills"], ["killchain", "~/kill-chain · attack vs. defense"],["cases", "~/case-files · projects"], ["research", "~/research · IoT & Mirai"], ["intel", "~/intel · THM, certs, timeline"], ["terminal", "~/shell · terminal"], ["ctf", "~/ctf · capture the flag"], ["contact", "~/contact"]]
-      .map(([id, l]) => ({ ico: "#", label: `Go to ${l}`, grp: "navigate", run: () => goto(id) })),
+    ...NAV.map(([id, l]) => ({ ico: "#", label: `Go to ${l}`, grp: "navigate", run: () => goto(id) })),
+    ...(PAGE === "home" ? [{ ico: "↗", label: "Open The Lab", grp: "navigate", kw: "ctf games flags", run: () => goto("lab") }]
+      : [{ ico: "←", label: "Back to the portfolio", grp: "navigate", kw: "home", run: () => { location.href = "index.html"; } }]),
     ...D.projects.map((p) => ({ ico: "▣", label: `Open case: ${p.title}`, grp: "case file", run: () => openCase(p.slug) })),
     { ico: "●", label: "Switch to RED TEAM mode", grp: "mode", kw: "offensive attack", run: () => setMode("red") },
     { ico: "●", label: "Switch to BLUE TEAM mode", grp: "mode", kw: "defensive defense", run: () => setMode("blue") },
@@ -538,7 +461,7 @@
     { ico: "@", label: "Copy email address", grp: "action", kw: "contact mail", run: copyEmail },
     { ico: "↗", label: "Open GitHub", grp: "link", run: () => window.open(P.github, "_blank", "noopener") },
     { ico: "↗", label: "Open LinkedIn", grp: "link", run: () => window.open(P.linkedin, "_blank", "noopener") },
-    { ico: "↻", label: "Replay boot sequence", grp: "system", run: () => { try { sessionStorage.removeItem("jd.booted"); } catch (e) { /* ignore */ } location.reload(); } }
+    { ico: "↻", label: "Replay boot sequence", grp: "system", run: () => { try { sessionStorage.removeItem("jd.booted"); } catch (e) { /* ignore */ } location.href = "index.html"; } }
   ];
   let palSel = 0, palItems = [];
   function renderPalette(q) {
@@ -551,7 +474,7 @@
     const list = $("#palette-list");
     list.innerHTML = palItems.length
       ? palItems.map((a, i) => `<li class="palette__item" role="option" id="pi-${i}" data-i="${i}" aria-selected="${i === 0}"><span class="ico">${esc(a.ico)}</span><span>${esc(a.label)}</span><span class="grp">${esc(a.grp)}</span></li>`).join("")
-      : `<li class="palette__empty">No matches. Try "red", "cv", or "terminal".</li>`;
+      : `<li class="palette__empty">No matches. Try "red", "cv", or "lab".</li>`;
     $("#palette-input").setAttribute("aria-activedescendant", palItems.length ? "pi-0" : "");
   }
   function movePalette(d) {
@@ -579,9 +502,11 @@
 
   /* ---------- misc actions ---------- */
   function openTerminal() {
-    goto("terminal");
+    const host = $("#xterm");
+    if (!host) { location.href = "lab.html#terminal"; return; }
+    goto(PAGE === "home" ? "top" : "terminal");
     const T = window.JDTerm;
-    T.init($("#xterm")).then(() => setTimeout(() => T.focus(), 700));
+    T.init(host).then(() => setTimeout(() => T.focus(), 700));
   }
   function downloadCV() {
     const a = document.createElement("a");
@@ -595,68 +520,84 @@
   }
 
   /* ================================================================
-     CTF UI
+     CTF
+     Site-wide: cookie challenge, Konami code, console banner, counters.
+     Lab page only: the flag board, submission form, admin console.
      ================================================================ */
   function ctfUI() {
     const C = window.JDCTF;
     if (!C) return;
-    const list = $("#flags");
-    const diffLabel = { easy: "easy", med: "medium", hard: "hard" };
-    list.innerHTML = C.FLAGS.map((f) => `
-      <li class="flag" id="flag-${f.id}">
-        <div class="flag__row">
-          <span class="flag__icon">${String(f.id).padStart(2, "0")}</span>
-          <span class="flag__name">${esc(f.name)}<small class="d-${f.diff}">${diffLabel[f.diff]}</small></span>
-          <button type="button" class="flag__hint-btn" aria-expanded="false" aria-controls="hint-${f.id}">hint</button>
-        </div>
-        <p class="flag__hint" id="hint-${f.id}" hidden>${esc(f.hint)}</p>
-      </li>`).join("");
-    list.addEventListener("click", (e) => {
-      const b = e.target.closest(".flag__hint-btn");
-      if (!b) return;
-      const h = document.getElementById(b.getAttribute("aria-controls"));
-      h.hidden = !h.hidden;
-      b.setAttribute("aria-expanded", String(!h.hidden));
-    });
 
-    const update = (st) => {
-      st.flags.forEach((f) => {
-        const el = document.getElementById("flag-" + f.id);
-        const ok = st.solved.includes(f.id);
-        el.classList.toggle("is-solved", ok);
-        el.querySelector(".flag__icon").textContent = ok ? "✓" : String(f.id).padStart(2, "0");
-      });
-      $("#ctf-bar").style.width = (st.solved.length / st.total) * 100 + "%";
-      $("#ctf-count").textContent = `${st.solved.length} / ${st.total} captured`;
-      $("#foot-flags").textContent = `flags ${st.solved.length}/${st.total}`;
+    // counters shown on both pages
+    const counters = (st) => {
+      const n = st.solved.length, total = st.total;
+      const foot = $("#foot-flags");
+      if (foot) foot.textContent = `flags ${n}/${total}`;
+      const tc = $("#teaser-count");
+      if (tc) tc.textContent = `${n} / ${total} captured`;
+      const zf = $("#zone-flags");
+      if (zf) zf.textContent = `${n} / ${total} captured`;
+      fill("#teaser-flags", st.flags.map((f) => `<span class="${st.solved.includes(f.id) ? "is-on" : ""}"></span>`).join(""));
     };
+
+    const list = $("#flags");
+    let board = null;
+    if (list) {
+      const diffLabel = { easy: "easy", med: "medium", hard: "hard" };
+      list.innerHTML = C.FLAGS.map((f) => `
+        <li class="flag" id="flag-${f.id}">
+          <div class="flag__row">
+            <span class="flag__icon">${String(f.id).padStart(2, "0")}</span>
+            <span class="flag__name">${esc(f.name)}<small class="d-${f.diff}">${diffLabel[f.diff]}</small></span>
+            <button type="button" class="flag__hint-btn" aria-expanded="false" aria-controls="hint-${f.id}">hint</button>
+          </div>
+          <p class="flag__hint" id="hint-${f.id}" hidden>${esc(f.hint)}</p>
+        </li>`).join("");
+      list.addEventListener("click", (e) => {
+        const b = e.target.closest(".flag__hint-btn");
+        if (!b) return;
+        const h = document.getElementById(b.getAttribute("aria-controls"));
+        h.hidden = !h.hidden;
+        b.setAttribute("aria-expanded", String(!h.hidden));
+      });
+      board = (st) => {
+        st.flags.forEach((f) => {
+          const el = document.getElementById("flag-" + f.id);
+          const ok = st.solved.includes(f.id);
+          el.classList.toggle("is-solved", ok);
+          el.querySelector(".flag__icon").textContent = ok ? "✓" : String(f.id).padStart(2, "0");
+        });
+        $("#ctf-bar").style.width = (st.solved.length / st.total) * 100 + "%";
+        $("#ctf-count").textContent = `${st.solved.length} / ${st.total} captured`;
+      };
+
+      const form = $("#ctf-form"), input = $("#ctf-input"), msg = $("#ctf-msg");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const r = await C.submit(input.value);
+        form.classList.remove("is-wrong");
+        if (r.ok) {
+          msg.className = "ctf__msg mono ok";
+          msg.textContent = r.already ? `[=] Already captured: ${r.flag.name}` : `[+] Flag captured: ${r.flag.name}`;
+          input.value = "";
+          if (!r.already) toast("[+] FLAG CAPTURED", r.flag.name);
+          if (r.all && !r.already) setTimeout(allDone, 700);
+        } else {
+          void form.offsetWidth;
+          form.classList.add("is-wrong");
+          msg.className = "ctf__msg mono bad";
+          msg.textContent = r.reason === "format" ? "[-] Format is JD{...}" : "[-] Incorrect flag. Keep digging.";
+        }
+      });
+    }
+
+    const update = (st) => { counters(st); board && board(st); };
     update(C.state());
-    C.onChange((st) => {
-      update(st);
-    });
+    C.onChange(update);
 
-    const form = $("#ctf-form"), input = $("#ctf-input"), msg = $("#ctf-msg");
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const r = await C.submit(input.value);
-      form.classList.remove("is-wrong");
-      if (r.ok) {
-        msg.className = "ctf__msg mono ok";
-        msg.textContent = r.already ? `[=] Already captured: ${r.flag.name}` : `[+] Flag captured: ${r.flag.name}`;
-        input.value = "";
-        if (!r.already) toast("[+] FLAG CAPTURED", r.flag.name);
-        if (r.all && !r.already) setTimeout(allDone, 700);
-      } else {
-        void form.offsetWidth;
-        form.classList.add("is-wrong");
-        msg.className = "ctf__msg mono bad";
-        msg.textContent = r.reason === "format" ? "[-] Format is JD{...}" : "[-] Incorrect flag. Keep digging.";
-      }
-    });
-
-    // flag 4
+    // flag 4: the cookie is set on every page; the admin console only exists in the Lab
     const adminFlag = C.cookieChallenge();
-    if (adminFlag) {
+    if (adminFlag && $("#ctf-admin")) {
       $("#ctf-admin").hidden = false;
       $("#ctf-admin-flag").textContent = "flag 4/6 : " + adminFlag;
     }
@@ -690,10 +631,11 @@
   }
 
   /* ================================================================
-     GITHUB LIVE FEED
+     GITHUB LIVE FEED (home page)
      ================================================================ */
   async function ghFeed() {
     const box = $("#gh-feed");
+    if (!box) return;
     let data = null;
     try { data = JSON.parse(sessionStorage.getItem("jd.gh") || "null"); } catch (e) { /* ignore */ }
     if (!data) {
@@ -730,14 +672,11 @@
      EVENTS
      ================================================================ */
   function bind() {
-    // anchors
     document.addEventListener("click", (e) => {
       const a = e.target.closest('a[href^="#"]');
       if (a && a.getAttribute("href").length > 1) {
         e.preventDefault();
-        const id = a.getAttribute("href").slice(1);
-        if (a.hasAttribute("data-open-terminal")) return openTerminal();
-        goto(id);
+        goto(a.getAttribute("href").slice(1));
         return;
       }
       if (a && a.getAttribute("href") === "#") { e.preventDefault(); goto("top"); }
@@ -761,9 +700,9 @@
     $$(".mode-switch button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
     $("#qv-open").addEventListener("click", openQuickView);
     $("#palette-open").addEventListener("click", openPalette);
-    $("#copy-email").addEventListener("click", copyEmail);
+    const copy = $("#copy-email");
+    if (copy) copy.addEventListener("click", copyEmail);
 
-    // palette input
     const pin = $("#palette-input");
     pin.addEventListener("input", () => renderPalette(pin.value));
     pin.addEventListener("keydown", (e) => {
@@ -781,7 +720,8 @@
     });
 
     // contact → mailto
-    $("#contact-form").addEventListener("submit", (e) => {
+    const cf = $("#contact-form");
+    if (cf) cf.addEventListener("submit", (e) => {
       e.preventDefault();
       const f = e.target.elements;
       const name = f.name.value.trim(), subject = f.subject.value.trim(), message = f.message.value.trim();
@@ -820,25 +760,33 @@
   navSpy();
   scanDial();
 
-  window.JDApp = { setMode, goto, openQuickView, openPalette, downloadCV, toast };
+  window.JDApp = { setMode, goto, openQuickView, openPalette, downloadCV, toast, page: PAGE };
 
-  window.JDFX && window.JDFX.initHero($("#net"));
-  window.JDFX && window.JDFX.initMirai({
-    canvas: $("#mirai"), btn: $("#sim-run"), count: $("#sim-count"),
-    bw: $("#sim-bw"), phase: $("#sim-phase"), offline: $("#sim-offline")
-  });
+  if (window.JDFX) {
+    window.JDFX.initHero($("#net"));
+    if ($("#mirai")) window.JDFX.initMirai({
+      canvas: $("#mirai"), btn: $("#sim-run"), count: $("#sim-count"),
+      bw: $("#sim-bw"), phase: $("#sim-phase"), offline: $("#sim-offline")
+    });
+  }
 
-  // lazy-start the terminal when it's near the viewport
-  new IntersectionObserver(([en], io) => {
-    if (en.isIntersecting) { io.disconnect(); window.JDTerm.init($("#xterm")); }
-  }, { rootMargin: "300px" }).observe($("#xterm"));
+  // Lab: start the shell when it's near the viewport
+  const xterm = $("#xterm");
+  if (xterm && PAGE === "lab") {
+    new IntersectionObserver(([en], io) => {
+      if (en.isIntersecting) { io.disconnect(); window.JDTerm.init(xterm); }
+    }, { rootMargin: "300px" }).observe(xterm);
+  }
 
   ghFeed();
 
   boot().then(() => {
     heroIntro();
-    killChain(); // create the pin before other triggers so their positions include its spacing
     reveals();
+    // Home: the hero shell introduces me by running `whoami`
+    if (xterm && PAGE === "home") {
+      setTimeout(() => window.JDTerm.init(xterm, { compact: true }).then(() => window.JDTerm.type("whoami")), reduced ? 0 : 1100);
+    }
     if (location.hash && location.hash.length > 1) setTimeout(() => goto(location.hash.slice(1)), 100);
   });
 })();

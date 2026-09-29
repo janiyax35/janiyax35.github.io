@@ -34,6 +34,39 @@ window.JDTerm = (() => {
     return String.fromCharCode(((ch.charCodeAt(0) - b + 13) % 26) + b);
   });
 
+  // The hero shell is narrow, so long text is word-wrapped to the terminal width
+  // (xterm on its own would break lines mid-word).
+  const cols = () => (term ? term.cols : 80);
+  const narrow = () => cols() < 72;
+  function wrap(text, indent = "", first = indent) {
+    const width = Math.max(20, cols() - 1);
+    const out = [];
+    let line = first, empty = true;
+    for (const word of String(text).split(/\s+/).filter(Boolean)) {
+      if (!empty && line.length + 1 + word.length > width) { out.push(line); line = indent; empty = true; }
+      line += (empty ? "" : " ") + word;
+      empty = false;
+    }
+    out.push(line);
+    return out.join("\n");
+  }
+  // same idea for a comma-separated list of [plain, painted] items
+  function wrapItems(items, indent) {
+    const width = Math.max(20, cols() - 1);
+    const out = [];
+    let line = indent, len = indent.length, empty = true;
+    items.forEach(([plain, painted], i) => {
+      const sep = i < items.length - 1 ? "," : "";
+      const need = plain.length + sep.length + (empty ? 0 : 1);
+      if (!empty && len + need > width) { out.push(line); line = indent; len = indent.length; empty = true; }
+      line += (empty ? "" : " ") + painted + c.dim(sep);
+      len += plain.length + sep.length + (empty ? 0 : 1);
+      empty = false;
+    });
+    out.push(line);
+    return out.join("\n");
+  }
+
   function theme() {
     const a = cssVar("--accent") || "#B6FF3B";
     return {
@@ -51,13 +84,13 @@ window.JDTerm = (() => {
     c.acc(c.b(`# ${p.title}`)),
     c.dim(`${p.id} · ${p.type}`),
     "",
-    p.summary,
+    wrap(p.summary),
     "",
-    c.cyan("## scope"), p.scope, "",
-    c.cyan("## what I built"), ...p.findings.map((f) => `  • ${f}`), "",
-    c.cyan("## outcome"), p.outcome, "",
-    c.dim("stack: ") + p.stack.join(", "),
-    c.dim("repo:  ") + p.repo
+    c.cyan("## scope"), wrap(p.scope), "",
+    c.cyan("## what I built"), ...p.findings.map((f) => wrap(f, "    ", "  • ")), "",
+    c.cyan("## outcome"), wrap(p.outcome), "",
+    wrap(p.stack.join(", "), "       ", "stack  "),
+    "repo   " + c.cyan(p.repo)
   ].join("\n");
 
   const FILES = {
@@ -65,14 +98,14 @@ window.JDTerm = (() => {
       c.acc(c.b(P.name)) + c.dim("  ·  ") + P.headline,
       c.dim(P.location),
       "",
-      P.summary,
+      wrap(P.summary),
       "",
       c.dim("status: ") + c.acc(P.status)
     ].join("\n"),
     "~/skills.txt": () => D.skills.map((g) =>
-      c.cyan(pad(g.title, 22)) + g.items.map((i) =>
-        i.team === "red" ? c.red(i.n) : i.team === "blue" ? c.cyan(i.n) : i.team === "both" ? c.acc(i.n) : i.n
-      ).join(c.dim(", "))
+      c.cyan(g.title) + "\n" + wrapItems(g.items.map((i) =>
+        [i.n, i.team === "red" ? c.red(i.n) : i.team === "blue" ? c.cyan(i.n) : i.team === "both" ? c.acc(i.n) : i.n]
+      ), "  ")
     ).join("\n") + "\n\n" + c.dim("legend: ") + c.red("offensive") + c.dim(" · ") + c.cyan("defensive") + c.dim(" · ") + c.acc("both"),
     "~/contact.txt": () => [
       c.dim(pad("email", 10)) + c.acc(P.email),
@@ -84,17 +117,17 @@ window.JDTerm = (() => {
     "~/research.md": () => [
       c.acc(c.b("# " + D.research.title)),
       c.dim(D.research.meta), "",
-      ...D.research.points.map((p) => "  • " + p), "",
+      ...D.research.points.map((p) => wrap(p, "    ", "  • ")), "",
       c.cyan("## emerging threats"),
-      ...D.research.threats.map((t, i) => `  ${c.dim("0" + (i + 1))} ${t.n}: ${c.mut(t.d)}`)
+      ...D.research.threats.map((t, i) => `  ${c.dim("0" + (i + 1))} ${c.b(t.n)}\n` + c.mut(wrap(t.d, "     ")))
     ].join("\n"),
     "~/cv.pdf": () => c.amber("cat: cv.pdf: binary file. Use ") + c.acc("cv") + c.amber(" to download it."),
     "~/.bash_history": () => [
       "cd ~/ops",
       "nmap -sC -sV 10.10.14.7",
       "vim notes.txt",
-      'echo "WQ{u1fg0el_e3c34gf_1gf3ys}"   ' + c.dim("# rot13'd, nobody will ever figure it out"),
-      "history -c   " + c.dim("# TODO: this didn't actually clear anything"),
+      'echo "WQ{u1fg0el_e3c34gf_1gf3ys}"  ' + c.dim("# rot13'd"),
+      "history -c  " + c.dim("# TODO: didn't clear a thing"),
       "exit"
     ].join("\n")
   };
@@ -144,15 +177,25 @@ window.JDTerm = (() => {
         const rows = Object.entries(CMDS).filter(([, v]) => v.d);
         for (const [k, v] of rows) ln("  " + c.acc(pad(k, 12)) + c.mut(v.d));
         ln("");
-        ln(c.dim("Tab autocompletes · ↑/↓ history · Ctrl+C cancel · Ctrl+L clear"));
+        ln(c.dim(wrap("Tab autocompletes · ↑/↓ history · Ctrl+C cancel · Ctrl+L clear")));
       }
     },
     about: { d: "who is Janith", run: () => ln(FILES["~/about.txt"]()) },
     whoami: {
-      d: "who are you",
+      d: "who runs this box",
       run() {
-        ln(root ? c.red("root") : "guest");
-        if (!root) ln(c.dim("(looking for me? try ") + c.acc("about") + c.dim(")"));
+        // label column + value wrapped by word (the phone shell is ~40 columns)
+        const row = (k, v, paint = (x) => x) => {
+          const lines = wrap(v, " ".repeat(8)).split("\n");
+          ln(lines.map((l, i) => (i ? " ".repeat(8) : c.dim(pad(k, 8))) + paint(l.slice(8))).join("\n"));
+        };
+        if (cols() >= 46) ln(c.acc(c.b(P.name)) + c.dim(" · ") + P.headline);
+        else { ln(c.acc(c.b(P.name))); ln(c.mut(P.headline)); }
+        row("study", "BSc (Hons) IT – Cyber Security @ SLIIT");
+        row("focus", "pentesting · network sec · secure dev");
+        row("rank", "TryHackMe top 7% · 133-day streak", c.acc);
+        row("status", P.status, c.acc);
+        ln(c.dim(`(you're logged in as ${root ? "root" : "guest"}. try `) + c.acc("help") + c.dim(")"));
       }
     },
     ls: {
@@ -165,7 +208,17 @@ window.JDTerm = (() => {
         const list = DIRS[target];
         if (!list) return ln(c.red(`ls: cannot access '${target}': No such file or directory`));
         const items = [...(all ? [".", "..", ...(HIDDEN[target] || [])] : []), ...list];
-        ln(items.map((f) => (f.endsWith("/") || f === "." || f === ".." ? c.cyan(c.b(f)) : f.startsWith(".") ? c.dim(f) : f)).join("   "));
+        const paint = (f) => (f.endsWith("/") || f === "." || f === ".." ? c.cyan(c.b(f)) : f.startsWith(".") ? c.dim(f) : f);
+        const width = Math.max(20, cols() - 1), lines = [];
+        let line = "", len = 0;
+        for (const f of items) {
+          const add = (len ? 3 : 0) + f.length;
+          if (len && len + add > width) { lines.push(line); line = ""; len = 0; }
+          line += (len ? "   " : "") + paint(f);
+          len += len ? 3 + f.length : f.length;
+        }
+        lines.push(line);
+        ln(lines.join("\n"));
       }
     },
     cd: {
@@ -198,10 +251,11 @@ window.JDTerm = (() => {
       d: "list case files",
       run() {
         for (const p of D.projects) {
-          ln(c.acc(p.id) + "  " + c.b(pad(p.title, 34)) + c.dim(p.type));
+          ln(c.acc(p.id) + "  " + (narrow() ? c.b(p.title) : c.b(pad(p.title, 34)) + c.dim(p.type)));
         }
         ln("");
-        ln(c.dim("read one: ") + c.acc("cat projects/kapruka.md") + c.dim("   open the GUI: ") + c.acc("goto cases"));
+        ln(c.dim("read one: ") + c.acc("cat projects/kapruka.md"));
+        ln(c.dim("open the case files: ") + c.acc("goto cases"));
       }
     },
     skills: { d: "tools & languages", run: () => ln(FILES["~/skills.txt"]()) },
@@ -215,43 +269,32 @@ window.JDTerm = (() => {
       }
     },
     research: { d: "IoT security paper", run: () => ln(FILES["~/research.md"]()) },
-    killchain: {
-      d: "attack vs. defense, 7 stages",
-      run() {
-        D.killchain.forEach((s, i) => {
-          ln(c.acc("0" + (i + 1)) + " " + c.b(pad(s.n, 24)) + c.dim(s.attack));
-          ln("   " + c.red("atk ") + c.mut(s.atk));
-          ln("   " + c.cyan("def ") + c.mut(s.def));
-        });
-        ln("");
-        ln(c.dim("Break any link and the attack fails. ") + c.acc("goto killchain") + c.dim(" for the visual."));
-      }
-    },
     contact: { d: "how to reach me", run: () => ln(FILES["~/contact.txt"]()) },
     nmap: {
       d: "scan a target",
       async run(args) {
         const target = args.filter((a) => !a.startsWith("-")).pop() || "janith";
-        ln(`Starting Nmap 7.95 ( https://nmap.org ) at ${new Date().toISOString().slice(0, 16).replace("T", " ")}`);
+        ln(`Starting Nmap 7.95 at ${new Date().toISOString().slice(0, 16).replace("T", " ")}`);
         await sleep(350);
         if (!/janith|jd|localhost|127\.0\.0\.1/i.test(target)) {
-          ln(c.amber(`Note: '${target}' is out of scope. Unauthorized scanning is how people get into trouble.`));
+          ln(c.amber(wrap(`Note: '${target}' is out of scope. Unauthorized scanning is how people get into trouble.`)));
           ln(c.dim("Rules of engagement say: scan ") + c.acc("janith") + c.dim(" only."));
           return;
         }
         ln(`Nmap scan report for ${c.acc("janith.qzz.io")} (185.199.108.153)`);
         ln("Host is up (0.0021s latency).");
         await sleep(300);
-        ln(c.dim(pad("PORT", 11) + pad("STATE", 8) + pad("SERVICE", 14) + "VERSION"));
+        const wide = cols() >= 64;
+        ln(c.dim(pad("PORT", 11) + pad("STATE", 10) + pad("SERVICE", 14) + (wide ? "VERSION" : "")));
         for (const r of D.scan) {
           if (cancelled) return;
           await sleep(180 + Math.random() * 220);
-          ln(pad(r.p, 11) + c.acc(pad(r.s, 8)) + pad(r.svc, 14) + c.mut(r.v));
+          ln(pad(r.p, 11) + c.acc(pad(r.s, 10)) + pad(r.svc, 14) + (wide ? c.mut(r.v) : ""));
         }
         await sleep(200);
-        ln(pad("3389/tcp", 11) + c.amber(pad("filtered", 8)) + pad("weekends", 14) + c.mut("(sometimes)"));
+        ln(pad("3389/tcp", 11) + c.amber(pad("filtered", 10)) + pad("weekends", 14) + (wide ? c.mut("(sometimes)") : ""));
         ln("");
-        ln(c.dim("Nmap done: 1 IP address (1 host up) scanned in 1.37 seconds"));
+        ln(c.dim(wrap("Nmap done: 1 IP address (1 host up) scanned in 1.37 seconds")));
       }
     },
     cv: {
@@ -270,11 +313,19 @@ window.JDTerm = (() => {
       }
     },
     goto: {
-      d: "scroll to a section",
+      d: "jump to a section",
       run([s]) {
-        const ids = ["whoami", "arsenal", "killchain", "cases", "research", "intel", "ctf", "contact", "top"];
-        if (!ids.includes(s)) return ln(c.amber("usage: goto <" + ids.join("|") + ">"));
+        const ids = ["top", "whoami", "arsenal", "cases", "research", "intel", "contact", "lab", "ctf", "security"];
+        if (!ids.includes(s)) return ln(c.amber("usage: goto <section>") + "\n" + c.dim(wrap(ids.join(" · "), "  ", "  ")));
         app().goto && app().goto(s);
+      }
+    },
+    lab: {
+      d: "open The Lab (CTF & more)",
+      run() {
+        if (app().page === "lab") return ln(c.dim("You're already in the lab. Try ") + c.acc("ctf") + c.dim("."));
+        ln(c.acc("→ ") + "Opening The Lab…");
+        setTimeout(() => { location.href = "lab.html"; }, 400);
       }
     },
     quickview: { d: "recruiter summary", run: () => app().openQuickView && app().openQuickView() },
@@ -288,6 +339,7 @@ window.JDTerm = (() => {
           ln("  " + (ok ? c.acc("[✓]") : c.dim("[ ]")) + " " + pad(f.name, 18) + c.dim(f.diff));
         }
         ln(c.dim("submit with: ") + c.acc("submit JD{...}"));
+        if (app().page !== "lab") ln(c.dim("scoreboard & hints: ") + c.acc("lab"));
       }
     },
     submit: {
@@ -304,7 +356,7 @@ window.JDTerm = (() => {
     clear: { d: "clear screen", run: () => term.clear() },
     echo: { run: (args) => ln(args.join(" ")) },
     date: { run: () => ln(new Date().toString()) },
-    uname: { run: (a) => ln(a.includes("-a") ? "JDOS 2.6.0-sliit #1 SMP x86_64 GNU/Linux (Year 3, Sem 1)" : "JDOS") },
+    uname: { run: (a) => ln(a.includes("-a") ? wrap("JDOS 2.6.0-sliit #1 SMP x86_64 GNU/Linux (Year 3, Sem 1)") : "JDOS") },
     rot13: { run: (a) => ln(rot13(a.join(" "))) },
     sudo: {
       run(args) {
@@ -313,7 +365,7 @@ window.JDTerm = (() => {
           ln(c.lime("[sudo] access granted. Good call."));
           ln("");
           ln("  " + c.b("Janith Deshan") + c.dim(": cybersecurity undergrad @ SLIIT"));
-          ln("  " + c.mut("pentesting · network security · secure dev · AI systems"));
+          ln(c.mut(wrap("pentesting · network security · secure dev · AI systems", "  ")));
           ln("");
           ln("  " + c.dim("→ ") + c.acc(P.email));
           ln("  " + c.dim("→ ") + P.linkedin);
@@ -325,7 +377,7 @@ window.JDTerm = (() => {
         ln(c.dim("(hint: ") + c.acc("sudo hire-me") + c.dim(" works though)"));
       }
     },
-    ssh: { run: () => ln(c.red("ssh: connect to host port 22: Connection refused") + c.dim("  (key-based auth only, obviously)")) },
+    ssh: { run: () => { ln(c.red("ssh: connect to host port 22: Connection refused")); ln(c.dim("(key-based auth only, obviously)")); } },
     rm: { run: (a) => ln(a.join(" ").includes("-rf") ? c.red("rm: nice try. This filesystem is read-only.") : c.red("rm: permission denied")) },
     vim: { run: () => ln(c.amber("You'd never get out. Protecting you from yourself.")) },
     exit: { run: () => ln(c.dim("There is no exit. Only ") + c.acc("goto contact") + c.dim(".")) },
@@ -423,7 +475,7 @@ window.JDTerm = (() => {
   }
 
   /* ---------- lifecycle ---------- */
-  async function init(el) {
+  async function init(el, opts = {}) {
     if (ready || booting) return;
     host = el;
     if (!window.Terminal) {
@@ -435,7 +487,7 @@ window.JDTerm = (() => {
     el.innerHTML = "";
     term = new window.Terminal({
       fontFamily: '"JetBrains Mono", Consolas, monospace',
-      fontSize: window.innerWidth < 600 ? 12 : 14,
+      fontSize: window.innerWidth < 600 ? 12 : opts.compact ? 13 : 14,
       lineHeight: 1.35,
       cursorBlink: true,
       cursorStyle: "block",
@@ -451,9 +503,14 @@ window.JDTerm = (() => {
     term.onData(onData);
     new ResizeObserver(() => { try { fit && fit.fit(); } catch (e) { /* ignore */ } }).observe(el);
 
-    ln(c.acc(c.b("jdsh")) + c.dim(" v2.6 · JD//OPS operator shell"));
-    ln(c.dim("Authorized guests only (that includes you)."));
-    ln("Type " + c.acc("help") + " for commands. Try " + c.acc("about") + ", " + c.acc("projects") + ", or " + c.acc("nmap janith") + ".");
+    if (opts.compact) {
+      ln(c.acc(c.b("jdsh")) + c.dim(" v2.6 · type ") + c.acc("help") + c.dim(" for commands"));
+    } else {
+      ln(c.acc(c.b("jdsh")) + c.dim(" v2.6 · JD//OPS operator shell"));
+      ln(c.dim("Authorized guests only (that includes you)."));
+      ln(narrow() ? wrap("Type help for commands. Try about, projects, or nmap janith.")
+        : "Type " + c.acc("help") + " for commands. Try " + c.acc("about") + ", " + c.acc("projects") + ", or " + c.acc("nmap janith") + ".");
+    }
     prompt();
     ready = true; booting = false;
     while (queue.length) await type(queue.shift());
