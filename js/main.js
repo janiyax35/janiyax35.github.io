@@ -286,6 +286,83 @@
     document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
   }
 
+  /* ---------- scan dial: scroll progress + current section ---------- */
+  function scanDial() {
+    const dial = $("#dial");
+    if (!dial) return;
+    const arc = $("#dial-arc"), needle = $("#dial-needle"), pctEl = $("#dial-pct");
+    const secEl = $("#dial-sec"), sectorEl = $("#dial-sector"), label = $("#dial-label"), btn = $("#dial-btn");
+    const blipsEl = $("#dial-blips");
+    const C = 2 * Math.PI * 33;
+    const p2 = (n) => String(n).padStart(2, "0");
+    const AT = 0.35; // a section is "current" once its top passes 35% of the viewport
+    arc.style.strokeDasharray = C;
+    arc.style.strokeDashoffset = C;
+
+    // 60 ticks, every 5th one longer
+    let t = "";
+    for (let i = 0; i < 60; i++) {
+      const a = (i / 60) * Math.PI * 2, s = Math.sin(a), c = Math.cos(a);
+      const major = i % 5 === 0, r1 = major ? 37 : 39.5, r2 = 42.5;
+      t += `<line${major ? ' class="major"' : ""} x1="${(50 + r1 * s).toFixed(2)}" y1="${(50 - r1 * c).toFixed(2)}" x2="${(50 + r2 * s).toFixed(2)}" y2="${(50 - r2 * c).toFixed(2)}"/>`;
+    }
+    $("#dial-ticks").innerHTML = t;
+
+    const sections = $$("main > section[id]").map((el) => ({
+      el,
+      name: el.id === "top" ? "~/home" : (el.querySelector("h2") ? el.querySelector("h2").textContent.trim() : "~/" + el.id)
+    }));
+    let blips = [], cur = -1, last = -1, raf = 0;
+    const maxScroll = () => Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+
+    // one blip per section, placed where the needle will be when that section becomes current
+    function layout() {
+      const max = maxScroll();
+      blipsEl.innerHTML = sections.map((s) => {
+        const y = s.el.getBoundingClientRect().top + window.scrollY - window.innerHeight * AT;
+        const a = Math.min(1, Math.max(0, y / max)) * Math.PI * 2;
+        return `<circle r="2" cx="${(50 + 47.5 * Math.sin(a)).toFixed(2)}" cy="${(50 - 47.5 * Math.cos(a)).toFixed(2)}"/>`;
+      }).join("");
+      blips = $$("circle", blipsEl);
+      cur = -1; last = -1;
+      update();
+    }
+
+    function update() {
+      raf = 0;
+      const p = Math.min(1, Math.max(0, window.scrollY / maxScroll()));
+      const pct = Math.round(p * 100);
+      dial.classList.toggle("is-on", window.scrollY > window.innerHeight * 0.35);
+      if (pct !== last) {
+        last = pct;
+        arc.style.strokeDashoffset = C * (1 - p);
+        needle.style.transform = `rotate(${p * 360}deg)`;
+        pctEl.textContent = String(pct).padStart(3, "0");
+        const done = pct >= 100;
+        dial.classList.toggle("is-complete", done);
+        label.textContent = done ? "scan complete" : "scanning";
+      }
+      let i = 0;
+      sections.forEach((s, j) => { if (s.el.getBoundingClientRect().top <= window.innerHeight * AT) i = j; });
+      if (i !== cur) {
+        cur = i;
+        secEl.textContent = sections[i].name;
+        sectorEl.textContent = `sector ${p2(i)}/${p2(sections.length - 1)}`;
+        blips.forEach((b, j) => { b.classList.toggle("is-past", j < i); b.classList.toggle("is-cur", j === i); });
+      }
+      btn.setAttribute("aria-label", `Scroll progress ${pct}%, reading ${sections[i].name}. Back to top`);
+    }
+
+    addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    let rt;
+    const relayout = () => { clearTimeout(rt); rt = setTimeout(layout, 150); };
+    addEventListener("resize", relayout);
+    new ResizeObserver(relayout).observe($("#main")); // late content (GitHub feed, fonts, pins) changes page height
+    if (hasST) ScrollTrigger.addEventListener("refresh", relayout);
+    btn.addEventListener("click", () => goto("top"));
+    layout();
+  }
+
   /* ---------- kill chain: pinned, one stage per scroll step ---------- */
   function killChain() {
     const sec = $("#killchain");
@@ -741,6 +818,7 @@
   ctfUI();
   smoothScroll();
   navSpy();
+  scanDial();
 
   window.JDApp = { setMode, goto, openQuickView, openPalette, downloadCV, toast };
 
