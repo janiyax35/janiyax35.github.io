@@ -265,6 +265,13 @@
         onEnter: () => gsap.to(o, { v: to, duration: 1.6, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(o.v); } })
       });
     });
+    // footer name rises into place as the page ends
+    if ($("#bigname")) {
+      gsap.from("#bigname .bigname__inner", {
+        yPercent: 28, ease: "none",
+        scrollTrigger: { trigger: ".footer", start: "top bottom", end: "bottom bottom", scrub: true }
+      });
+    }
     document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
   }
 
@@ -341,6 +348,30 @@
     if (hasST) ScrollTrigger.addEventListener("refresh", relayout);
     btn.addEventListener("click", () => goto("top"));
     layout();
+  }
+
+  /* ---------- footer name: accent spotlight follows the pointer ---------- */
+  function bigName() {
+    const wrap = $("#bigname");
+    if (!wrap || !matchMedia("(pointer: fine)").matches) return;
+    const glow = $(".bigname__glow", wrap);
+    let raf = 0, x = 0, y = 0;
+    // the name sits behind the page content, so track the pointer on the window
+    addEventListener("pointermove", (e) => {
+      x = e.clientX; y = e.clientY;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const r = glow.getBoundingClientRect();
+        const inside = y >= r.top - 40 && y <= r.bottom && x >= r.left && x <= r.right;
+        wrap.classList.toggle("is-lit", inside);
+        if (inside) {
+          glow.style.setProperty("--mx", `${x - r.left}px`);
+          glow.style.setProperty("--my", `${y - r.top}px`);
+        }
+      });
+    }, { passive: true });
+    document.addEventListener("pointerleave", () => wrap.classList.remove("is-lit"));
   }
 
   function navSpy() {
@@ -760,7 +791,9 @@
   navSpy();
   scanDial();
 
-  window.JDApp = { setMode, goto, openQuickView, openPalette, downloadCV, toast, page: PAGE };
+  bigName();
+
+  window.JDApp = { setMode, goto, openQuickView, openPalette, openTerminal, openCase, downloadCV, copyEmail, toast, page: PAGE };
 
   if (window.JDFX) {
     window.JDFX.initHero($("#net"));
