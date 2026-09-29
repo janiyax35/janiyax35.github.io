@@ -26,6 +26,8 @@ window.JD = {
     website: "https://janith.qzz.io",
     tryhackme: "", // ← paste your public TryHackMe profile URL here to show the link
     cv: "assets/Janith_Deshan_CV.pdf",
+    // Contact form delivery (EmailJS). These IDs are public by design; abuse limits live in main.js.
+    emailjs: { serviceId: "service_vt4z0ad", templateId: "template_1z6zc59", publicKey: "fPKkVwF73NhpvP2VE" },
     status: "Open to internships & collaborations", // ← edit if needed
     summary:
       "Cybersecurity undergraduate at SLIIT specializing in network security, penetration testing, and secure application development. Ranked top 7% globally on TryHackMe. I build full-stack and AI-integrated systems, most recently an AI shopping assistant recognized in a national developer competition."

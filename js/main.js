@@ -693,6 +693,106 @@
   }
 
   /* ================================================================
+     CONTACT FORM
+     Sends through EmailJS. If that fails, a mailto backup appears so
+     no message is lost. Abuse limits: honeypot, 3 s time trap, 30 s
+     cooldown (ours + EmailJS limitRate), headless browsers blocked.
+     ================================================================ */
+  function contactForm() {
+    const form = $("#contact-form");
+    if (!form) return;
+    const cfg = P.emailjs || {};
+    const f = form.elements;
+    const btn = $("#tx-btn"), label = $("#tx-label"), status = $("#tx-status"), backup = $("#tx-backup");
+    const loadedAt = Date.now();
+    const COOLDOWN = 30000, KEY = "jd.contact.last";
+    const OK_TEXT = "[OK] transmission delivered · I'll reply within 48h";
+
+    let ready = false;
+    if (window.emailjs && cfg.publicKey) {
+      try {
+        window.emailjs.init({ publicKey: cfg.publicKey, blockHeadless: true, limitRate: { id: "jd-contact", throttle: COOLDOWN } });
+        ready = true;
+      } catch (e) { ready = false; }
+    }
+
+    const setStatus = (kind, text) => { status.className = "form__status mono" + (kind ? " is-" + kind : ""); status.textContent = text; };
+    const values = () => ({
+      name: f.name.value.trim(), reply_to: f.reply_to.value.trim(),
+      subject: f.subject.value.trim(), message: f.message.value.trim()
+    });
+    const mailtoHref = (v) =>
+      `mailto:${P.email}?subject=${encodeURIComponent("[Portfolio] " + (v.subject || "Hello from " + (v.name || "a visitor")))}` +
+      `&body=${encodeURIComponent(v.message + "\n\n- " + v.name + (v.reply_to ? " <" + v.reply_to + ">" : ""))}`;
+    backup.addEventListener("click", () => { location.href = mailtoHref(values()); });
+
+    const validate = (v) => {
+      if (!v.name) return [f.name, "Add your name (handle)."];
+      if (!v.reply_to || !f.reply_to.checkValidity()) return [f.reply_to, "Add a valid reply-to email so I can answer."];
+      if (v.message.length < 10) return [f.message, "Payload is too short (10+ characters)."];
+      return null;
+    };
+    const sentAt = () => {
+      try {
+        return new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Colombo", dateStyle: "medium", timeStyle: "short" }).format(new Date()) + " (Sri Lanka time)";
+      } catch (e) { return new Date().toISOString(); }
+    };
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (btn.disabled) return;
+      backup.hidden = true;
+      const v = values();
+      const bad = validate(v);
+      if (bad) { setStatus("bad", "[-] " + bad[1]); bad[0].focus(); return; }
+
+      // bots: honeypot filled, or sent within 3 s of page load. Look successful, send nothing.
+      if (f.website.value || Date.now() - loadedAt < 3000) { setStatus("ok", OK_TEXT); form.reset(); return; }
+
+      let last = 0;
+      try { last = +localStorage.getItem(KEY) || 0; } catch (err) { /* ignore */ }
+      const wait = COOLDOWN - (Date.now() - last);
+      if (wait > 0) { setStatus("bad", `[-] Cooling down. Try again in ${Math.ceil(wait / 1000)}s.`); return; }
+
+      if (!ready) {
+        setStatus("bad", "[-] The mail service didn't load. Use the backup below.");
+        backup.hidden = false;
+        return;
+      }
+
+      btn.disabled = true;
+      label.textContent = "Transmitting…";
+      setStatus("busy", "[..] opening secure channel…");
+      try {
+        await window.emailjs.send(cfg.serviceId, cfg.templateId, {
+          from_name: v.name,
+          reply_to: v.reply_to,
+          subject: v.subject || `Hello from ${v.name}`,
+          message: v.message,
+          sent_at: sentAt()
+        });
+        try { localStorage.setItem(KEY, String(Date.now())); } catch (err) { /* ignore */ }
+        setStatus("ok", OK_TEXT);
+        toast("[OK] TRANSMISSION SENT", "I'll reply within 48h");
+        form.reset();
+      } catch (err) {
+        const code = err && err.status;
+        const detail = err && (err.text || err.message) ? String(err.text || err.message).slice(0, 140) : "";
+        console.error("[contact] EmailJS error", code, detail, err);
+        if (code === 429) setStatus("bad", "[-] Easy there: one transmission every 30 seconds.");
+        else {
+          setStatus("bad", (code === 451 ? "[-] Automated browsers can't send messages." : "[-] Transmission failed. Use the backup below, or email me directly.") +
+            (code || detail ? `\n    error ${code || "?"}${detail ? ": " + detail : ""}` : ""));
+          backup.hidden = false;
+        }
+      } finally {
+        btn.disabled = false;
+        label.textContent = "Transmit";
+      }
+    });
+  }
+
+  /* ================================================================
      EVENTS
      ================================================================ */
   function bind() {
@@ -743,21 +843,7 @@
       if (li && +li.dataset.i !== palSel) movePalette(+li.dataset.i - palSel);
     });
 
-    // contact → mailto
-    const cf = $("#contact-form");
-    if (cf) cf.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const f = e.target.elements;
-      const name = f.name.value.trim(), subject = f.subject.value.trim(), message = f.message.value.trim();
-      if (!name || !message) return;
-      const label = $("#tx-label");
-      const go = () => {
-        location.href = `mailto:${P.email}?subject=${encodeURIComponent("[Portfolio] " + (subject || "Hello from " + name))}&body=${encodeURIComponent(message + "\n\n- " + name)}`;
-        label.textContent = "Transmit";
-      };
-      if (hasScramble && !reduced) gsap.to(label, { duration: 0.7, scrambleText: { text: "Composing packet…", chars: "01" }, onComplete: () => setTimeout(go, 250) });
-      else go();
-    });
+    contactForm();
 
     // keyboard shortcuts
     addEventListener("keydown", (e) => {
