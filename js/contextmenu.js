@@ -73,7 +73,10 @@
       const p = D.projects.find((x) => x.slug === card.dataset.slug);
       if (p) {
         ctx.push(item("▣", "Open case file", () => app().openCase && app().openCase(p.slug)));
-        ctx.push(item("↗", "Open repo", () => openTab(p.repo)));
+        if (p.live) ctx.push(item("●", "Open live platform", () => openTab(p.live)));
+        ctx.push(p.private
+          ? item("✉", "Request repo access", () => { location.href = app().repoRequest(p); })
+          : item("↗", "Open repo", () => openTab(p.repo)));
       }
     }
 

@@ -90,7 +90,8 @@ window.JDTerm = (() => {
     c.cyan("## what I built"), ...p.findings.map((f) => wrap(f, "    ", "  • ")), "",
     c.cyan("## outcome"), wrap(p.outcome), "",
     wrap(p.stack.join(", "), "       ", "stack  "),
-    "repo   " + c.cyan(p.repo)
+    "repo   " + (p.private ? c.amber("private") + c.dim(" · available on request") : c.cyan(p.repo)),
+    ...(p.live ? ["live   " + c.cyan(p.live) + (p.liveNote ? "\n" + c.dim(wrap(p.liveNote, "       ", "       ")) : "")] : [])
   ].join("\n");
 
   const FILES = {

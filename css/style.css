@@ -327,6 +327,20 @@ html[data-mode="blue"] .chip:is([data-team="blue"], [data-team="both"]) {
 .case__metric { display: flex; align-items: baseline; gap: 10px; margin-top: auto; padding-top: 6px; }
 .case__metric b { font: 700 2rem/1 var(--font-sans); letter-spacing: -.03em; color: var(--accent); }
 .case__metric span { font: 11px var(--font-mono); color: var(--dim); text-transform: uppercase; letter-spacing: .08em; }
+.case__lock {
+  display: inline-flex; align-items: center; gap: 5px; margin-left: auto; align-self: center;
+  padding: 3px 7px; border: 1px solid var(--line-2); border-radius: 2px;
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap;
+}
+.case__lock svg, .modal__lock svg { flex: none; }
+.case--small .case__title { font-size: 1.15rem; }
+.case--small .case__body { gap: 10px; padding-top: 18px; }
+.case--small .case__metric b { font-size: 1.6rem; }
+.modal__lock { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 12px; color: var(--muted); }
+.modal__meta a[href^="mailto"] { font-size: 12px; }
+.modal__live { margin: -10px 0 24px; font-size: 12.5px; line-height: 1.6; }
+.modal__live a { color: var(--accent); text-decoration: none; }
+.modal__live a:hover { text-decoration: underline; }
 .case__stack { display: flex; flex-wrap: wrap; gap: 6px; }
 .case__stack .chip { font-size: 11px; padding: 4px 8px; }
 .case__actions { display: flex; gap: 8px; padding: 0 18px 18px; }
@@ -823,6 +837,11 @@ html.anim [data-reveal] { opacity: 0; }
   .sec-head { gap: 12px; }
   .sec-head__meta { display: none; }
   .term--hero .term__body { height: 280px; }
+  .case__id { white-space: nowrap; }
+  .case__metric { flex-wrap: wrap; row-gap: 8px; }
+  .case__actions { flex-wrap: wrap; }
+  .case__actions .btn { flex: 1 1 calc(50% - 4px); white-space: nowrap; }
+  .case__actions .btn:only-child, .case__actions .btn--primary:first-child:nth-last-child(3) { flex-basis: 100%; }
   .teaser { grid-template-columns: 1fr; }
   .lab-hero__globe { max-width: 340px; }
   .dial { left: 12px; bottom: 12px; }

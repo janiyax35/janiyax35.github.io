@@ -117,7 +117,42 @@ window.JD = {
 
   projects: [
     {
-      id: "CASE-001", slug: "kapruka", featured: true,
+      id: "CASE-001", slug: "sentinel-ctf", featured: true, team: "both",
+      title: "Operation Silent Dawn: Sentinel CTF",
+      type: "CTF Platform · Offensive Security",
+      metric: { v: "6", l: "stages · 6 domains" },
+      summary: "A custom CTF platform and six-stage incident-response challenge: players trace a breach at a fictional aerospace observatory through forensics, OSINT, web, network, crypto, and reverse engineering.",
+      stack: ["Node.js (Vercel serverless)", "Supabase / PostgreSQL", "Row-Level Security", "HMAC-SHA256", "JavaScript", "Python"],
+      scope: "Design and build a complete CTF Play Box for a Year 3 penetration testing cohort: one connected story, six progressive stages, and the platform to run it.",
+      findings: [
+        "Built a custom CTF platform instead of using CTFd: a Vercel serverless API and Supabase PostgreSQL with row-level security on every table, plus accounts, a live scoreboard, hint unlocks, announcements, and an admin console with leaderboard moderation.",
+        "Six stages across six domains: audio steganography with a decoy flag, OSINT, SQL-injection web exploitation, packet-capture analysis, weak-RNG cryptanalysis, and a reverse-engineering capstone.",
+        "Flags are never stored in plaintext: submissions are checked against peppered HMAC-SHA256 hashes with a timing-safe comparison, rate-limited to 5 attempts per minute, and written to an audit log.",
+        "Hardened delivery: a strict Content-Security-Policy, frame-ancestors 'none', and deny-by-default security headers."
+      ],
+      outcome: "Deployed at ctf.janith.qzz.io as an invite-only platform. Contact me to be added to the access list.",
+      repo: "https://github.com/janiyax35/sentinel-ctf", private: true,
+      live: "https://ctf.janith.qzz.io", liveNote: "Invite-only: contact me to be added to the access list."
+    },
+    {
+      id: "CASE-002", slug: "nodegoat-devsecops", team: "both",
+      title: "NodeGoat DevSecOps Pipeline",
+      type: "DevSecOps · AppSec",
+      metric: { v: "4", l: "vulns fixed · 4 CI gates" },
+      summary: "Secured OWASP NodeGoat end to end: a STRIDE threat model, four OWASP Top 10 vulnerabilities exploited and then fixed, and a GitHub Actions pipeline with four security gates.",
+      stack: ["Node.js", "Express", "MongoDB", "Docker Compose", "GitHub Actions", "Semgrep", "Gitleaks", "Trivy"],
+      scope: "Apply DevSecOps to an intentionally vulnerable Node.js / Express / MongoDB app (presented as \"RetireEasy\", a retirement-savings portal), containerised as a two-tier stack.",
+      findings: [
+        "STRIDE threat model: five application-specific threats rated on a likelihood × impact matrix and mapped to controls.",
+        "Exploited, then fixed: NoSQL injection ($where replaced by a typed $gt query), stored XSS (sanitised input plus context-aware output encoding), IDOR (session ownership check returning 403), and weak session management (httpOnly, sameSite, expiry, secret from env).",
+        "Verified every fix by re-running the original exploit and with a before/after Semgrep SAST comparison.",
+        "GitHub Actions pipeline with four gates: Gitleaks secrets scanning (blocks the build), Semgrep SAST, npm audit dependency scanning, and Trivy container scanning."
+      ],
+      outcome: "Four critical/high findings closed, secrets moved to environment variables and GitHub encrypted secrets, and a pipeline that stops leaked credentials before they merge.",
+      repo: "https://github.com/janiyax35/NodeGoat-DevSecOps-Project", private: true
+    },
+    {
+      id: "CASE-003", slug: "kapruka",
       title: "Kapruka AI Shopping Agent",
       type: "AI · Agents · MCP",
       metric: { v: "700+", l: "national entrants" },
@@ -132,7 +167,7 @@ window.JD = {
       repo: "https://github.com/janiyax35/kapruka-shopping-agent"
     },
     {
-      id: "CASE-002", slug: "enterprise-network", team: "blue", topology: true,
+      id: "CASE-004", slug: "enterprise-network", team: "blue", topology: true,
       title: "Enterprise Network Architecture",
       type: "Network Security",
       metric: { v: "75+", l: "hosts segmented" },
@@ -148,7 +183,7 @@ window.JD = {
       repo: "https://github.com/janiyax35/Enterprise-Network-Architecture-Design"
     },
     {
-      id: "CASE-003", slug: "cryptoguard", team: "both",
+      id: "CASE-005", slug: "cryptoguard", team: "both",
       title: "CryptoGuard & CyberGuard Tools",
       type: "Security Tooling",
       metric: { v: "LIVE", l: "web interface" },
@@ -163,7 +198,7 @@ window.JD = {
       repo: "https://github.com/janiyax35" // ← replace with the repo / live URL
     },
     {
-      id: "CASE-004", slug: "bytex",
+      id: "CASE-006", slug: "bytex",
       title: "ByteX Customer Care System",
       type: "Full-Stack · Secure Dev",
       metric: { v: "6", l: "user roles" },
@@ -179,7 +214,7 @@ window.JD = {
       repo: "https://github.com/janiyax35/ByteX-Customer-Care-System"
     },
     {
-      id: "CASE-005", slug: "barkid",
+      id: "CASE-007", slug: "barkid",
       title: "BarkID: Dog Breed Identifier",
       type: "Machine Learning",
       metric: { v: "120+", l: "breeds classified" },
@@ -194,7 +229,7 @@ window.JD = {
       repo: "https://github.com/janiyax35/Dog-Breed-Identifier"
     },
     {
-      id: "CASE-006", slug: "intelli-home",
+      id: "CASE-008", slug: "intelli-home",
       title: "Intelli-Home",
       type: "IoT · Embedded",
       metric: { v: "RT", l: "sensor-driven control" },
@@ -207,6 +242,23 @@ window.JD = {
       ],
       outcome: "A working IoT system, which later informed my IoT security research.",
       repo: "https://github.com/janiyax35/Intelli-Home"
+    },
+    {
+      id: "CASE-009", slug: "ghostpdf", small: true,
+      title: "GhostPDF",
+      type: "Security Tooling · TUI",
+      metric: { v: "3", l: "obfuscation modes" },
+      summary: "A terminal app that hides PDFs in plain sight: header swap, XOR scramble, or AES encryption.",
+      stack: ["Python", "Textual", "cryptography"],
+      scope: "Side project: a fast, keyboard-driven terminal tool for obfuscating and encrypting PDF files.",
+      findings: [
+        "Header swap changes the PDF magic bytes so document viewers treat the file as corrupted.",
+        "XOR scramble with a custom key for quick byte-level obfuscation.",
+        "AES encryption via Fernet (AES-128-CBC + HMAC-SHA256) with PBKDF2 password-derived keys.",
+        "Built-in file browser, keyboard shortcuts, and light/dark themes."
+      ],
+      outcome: "A small, polished tool built in my free time.",
+      repo: "https://github.com/janiyax35/tools-GhostPDF", private: true
     }
   ],
 
@@ -292,7 +344,7 @@ window.JD = {
 
   ticker: [
     ["ok", "THM streak: 133 days"],
-    ["info", "6 case files indexed"],
+    ["info", "9 case files indexed"],
     ["alert", "Mirai-class botnet simulation armed in ~/research"],
     ["ok", "Kapruka Agent Challenge: Builder"],
     ["info", "Firewall policy: default deny"],
