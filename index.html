@@ -427,6 +427,27 @@
     <div class="rootdlg__inner mono" id="root-body"></div>
   </dialog>
 
+  <!-- ========== SCAN DIAL (scroll progress) ========== -->
+  <div class="dial" id="dial">
+    <button type="button" class="dial__btn" id="dial-btn" aria-label="Scroll progress. Back to top">
+      <span class="dial__sweep" aria-hidden="true"></span>
+      <svg class="dial__svg" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="dial__bg" cx="50" cy="50" r="46"/>
+        <g class="dial__ticks" id="dial-ticks"></g>
+        <circle class="dial__track" cx="50" cy="50" r="33"/>
+        <circle class="dial__arc" id="dial-arc" cx="50" cy="50" r="33"/>
+        <g class="dial__blips" id="dial-blips"></g>
+        <g class="dial__needle" id="dial-needle"><line x1="50" y1="50" x2="50" y2="21"/><circle cx="50" cy="50" r="2.4"/></g>
+      </svg>
+      <span class="dial__pct mono" aria-hidden="true"><b id="dial-pct">000</b><small>%</small></span>
+    </button>
+    <div class="dial__read mono" aria-hidden="true">
+      <span class="dial__label" id="dial-label">scan</span>
+      <span class="dial__sec" id="dial-sec">~/home</span>
+      <span class="dial__sector" id="dial-sector">sector 00/00</span>
+    </div>
+  </div>
+
   <div class="toasts" id="toasts" aria-live="polite"></div>
 
   <!-- ========== SCRIPTS (pinned + SRI) ========== -->
