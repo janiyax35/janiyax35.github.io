@@ -242,33 +242,27 @@ window.JD = {
       { v: 12, suf: "", l: "Badges earned" }
     ],
     paths: [
-      { n: "loveatfirstbreach", s: "done", d: "Feb 2026" },
       { n: "Pre Security (Legacy)", s: "done", d: "Feb 2026" },
       { n: "AI Security", s: "wip", d: "In progress" },
       { n: "Cyber Security 101", s: "wip", d: "In progress" }
     ]
   },
 
+  /* certifications, newest first. tag = short issuer label shown on the right */
   certs: [
-    { t: "Kapruka Agent Challenge 2026: Certificate of Participation (Builder)", o: "Kapruka Holdings PLC · July 2026", s: "done" },
-    { t: "Introduction to Cybersecurity", o: "Cisco Networking Academy", s: "wip" },
-    { t: "Networking Basics", o: "Cisco Networking Academy", s: "wip" },
-    { t: "Google Cloud Arcade Badges: Level 1–3", o: "Google Cloud Skills Boost · 2025-CH2", s: "done" }
+    { t: "Hacker Holidays Completion Certificate", o: "TryHackMe", tag: "THM", d: "Aug 2026", s: "done" },
+    { t: "Introduction to Cybersecurity", o: "Cisco Networking Academy", tag: "CISCO", d: "Aug 2026", s: "done" },
+    { t: "Kapruka Agent Challenge 2026: Certificate of Participation (Builder)", o: "Kapruka Holdings PLC", tag: "KAPRUKA", d: "Jul 2026", s: "done" },
+    { t: "loveatfirstbreach", o: "TryHackMe", tag: "THM", d: "Feb 2026", s: "done" },
+    { t: "Google Cloud Arcade Badges: Level 1–3", o: "Google Cloud Skills Boost · 2025-CH2", tag: "GCP", d: "2025", s: "done" },
+    { t: "Networking Basics", o: "Cisco Networking Academy", tag: "CISCO", d: "In progress", s: "wip" }
   ],
 
-  /* timeline rendered as `git log --graph` (newest first) */
-  log: [
-    { h: "e7c41a9", ref: "HEAD -> main", d: "2026-07", type: "feat", m: "Kapruka Agent Challenge: Builder certificate (700+ devs)" },
-    { h: "b3d09f2", d: "2026", type: "research", m: "IoT security paper: Mirai, botnets & future risks" },
-    { h: "91aa6c0", d: "2026-02", type: "thm", m: "Completed 'loveatfirstbreach' + 'Pre Security' paths" },
-    { h: "5f2e7d1", d: "2025", type: "cloud", m: "Google Cloud Arcade badges: Level 1–3" },
-    { h: "2c8b44e", ref: "tag: sliit", d: "2024-06", type: "init", m: "BSc (Hons) IT – Cyber Security @ SLIIT, Malabe" },
-    { h: "0a1f3b7", d: "2023", type: "base", m: "G.C.E. Advanced Level: Mahanama College, Colombo 03" }
-  ],
-
+  /* education (newest first). start/end on the degree drive its progress bar */
   education: [
-    { t: "BSc (Hons) Information Technology – Cyber Security", o: "Sri Lanka Institute of Information Technology (SLIIT), Malabe", d: "Jun 2024 – Jul 2028 · Year 3, Semester 1" },
-    { t: "G.C.E. Advanced Level", o: "Mahanama College, Colombo 03", d: "2023" }
+    { t: "BSc (Hons) Information Technology – Cyber Security", o: "Sri Lanka Institute of Information Technology (SLIIT), Malabe", when: "2024 – 2028", d: "Year 3, Semester 1", status: "In progress", start: "2024-06", end: "2028-07" },
+    { t: "G.C.E. Advanced Level", o: "Mahanama College, Colombo 03", when: "2023", d: "Technology stream", status: "Passed" },
+    { t: "G.C.E. Ordinary Level", o: "Mahanama College, Colombo 03", when: "2020", d: "", status: "Passed" }
   ],
 
   /* hero "nmap" panel */
