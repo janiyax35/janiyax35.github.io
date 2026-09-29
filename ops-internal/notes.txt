@@ -1,0 +1,12 @@
+# ops-internal/notes.txt
+# internal notes. DO NOT PUBLISH.
+# (robots.txt keeps this hidden... right?)
+
+[ ] rotate lab VPN keys
+[ ] finish THM "AI Security" path
+[x] add Disallow: /ops-internal/ to robots.txt  <- that'll stop them
+
+reminder to self: robots.txt is a request, not access control.
+anyone can read it, and it points straight here.
+
+flag 2/6 : JD{r0b0ts_txt_1s_n0t_4cc3ss_c0ntr0l}

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /ops-internal/
+
+Sitemap: https://janith.qzz.io/sitemap.xml

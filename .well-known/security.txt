@@ -1,0 +1,8 @@
+# Security contact for janith.qzz.io (RFC 9116)
+# Found a real issue on this site (not a CTF flag)? Please report it responsibly.
+
+Contact: mailto:janithmihijaya123@gmail.com
+Expires: 2027-09-29T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://janith.qzz.io/.well-known/security.txt
+Policy: https://janith.qzz.io/#security
