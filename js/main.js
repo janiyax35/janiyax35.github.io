@@ -151,7 +151,10 @@
      ================================================================ */
   function heroIntro() {
     if (PAGE === "lab") {
-      if (animate) gsap.from(".lab-hero__inner > *", { y: 22, opacity: 0, duration: 0.9, stagger: 0.08, ease: "power3.out" });
+      if (animate) {
+        gsap.from(".lab-hero__copy > *", { y: 22, opacity: 0, duration: 0.9, stagger: 0.08, ease: "power3.out" });
+        gsap.from(".lab-hero__globe", { opacity: 0, scale: 0.92, duration: 1.4, ease: "power3.out", delay: 0.2 });
+      }
       return;
     }
     if (animate) {
@@ -797,6 +800,7 @@
 
   if (window.JDFX) {
     window.JDFX.initHero($("#net"));
+    window.JDFX.initGlobe($("#globe"));
     if ($("#mirai")) window.JDFX.initMirai({
       canvas: $("#mirai"), btn: $("#sim-run"), count: $("#sim-count"),
       bw: $("#sim-bw"), phase: $("#sim-phase"), offline: $("#sim-offline")
