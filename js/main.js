@@ -17,6 +17,9 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
   const ext = 'target="_blank" rel="noopener noreferrer"';
   const fill = (sel, markup) => { const el = $(sel); if (el) el.innerHTML = markup; return el; };
+  const LOCK = '<svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/></svg>';
+  // private repos: a pre-filled email asking for access
+  const repoRequest = (p) => `mailto:${P.email}?subject=${encodeURIComponent("Repo access request: " + p.title)}&body=${encodeURIComponent("Hi Janith,\n\nCould I get access to the " + p.title + " repository?\n\nGitHub username: \nReason: \n\nThanks!")}`;
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
@@ -51,17 +54,20 @@
       </div>`).join(""));
 
     fill("#cases-grid", D.projects.map((p) => `
-      <article class="panel case${p.featured ? " case--featured" : ""}" data-slug="${p.slug}" data-case="${p.slug}"${p.team ? ` data-team="${p.team}"` : ""} data-reveal>
+      <article class="panel case${p.featured ? " case--featured" : ""}${p.small ? " case--small" : ""}" data-slug="${p.slug}" data-case="${p.slug}"${p.team ? ` data-team="${p.team}"` : ""} data-reveal>
         <div class="case__top"><span class="case__id">${esc(p.id)}</span><span>${esc(p.type)}</span></div>
         <div class="case__body">
           <h3 class="case__title">${esc(p.title)}</h3>
           <p class="case__sum">${esc(p.summary)}</p>
-          <div class="case__stack">${p.stack.slice(0, p.featured ? 6 : 4).map((s) => `<span class="chip">${esc(s)}</span>`).join("")}</div>
-          <div class="case__metric"><b>${esc(p.metric.v)}</b><span>${esc(p.metric.l)}</span></div>
+          <div class="case__stack">${p.stack.slice(0, p.featured ? 6 : p.small ? 3 : 4).map((s) => `<span class="chip">${esc(s)}</span>`).join("")}</div>
+          <div class="case__metric"><b>${esc(p.metric.v)}</b><span>${esc(p.metric.l)}</span>${p.private ? `<span class="case__lock mono" title="Private repository, available on request">${LOCK} private · on request</span>` : ""}</div>
         </div>
         <div class="case__actions">
           <button type="button" class="btn btn--primary" data-case="${p.slug}">Open file</button>
-          <a class="btn" href="${esc(p.repo)}" ${ext}>Repo ↗</a>
+          ${p.live ? `<a class="btn" href="${esc(p.live)}" ${ext} title="${esc(p.liveNote || "")}">Live ↗</a>` : ""}
+          ${p.private
+            ? `<a class="btn" href="${esc(repoRequest(p))}" title="Private repository, available on request">Request repo</a>`
+            : `<a class="btn" href="${esc(p.repo)}" ${ext}>Repo ↗</a>`}
         </div>
       </article>`).join(""));
     fill("#extras", D.extraProjects.map((x) =>
@@ -434,8 +440,11 @@
         <div class="modal__meta">
           <div><span>Type</span><b>${esc(p.type)}</b></div>
           <div><span>Key metric</span><b class="accent">${esc(p.metric.v)}</b> <b style="font-weight:400;color:var(--muted)">${esc(p.metric.l)}</b></div>
-          <div><span>Source</span><a href="${esc(p.repo)}" ${ext}>${esc(p.repo.replace("https://", ""))} ↗</a></div>
+          <div><span>Source</span>${p.private
+            ? `<b class="modal__lock mono">${LOCK} private · on request</b> <a href="${esc(repoRequest(p))}">request access</a>`
+            : `<a href="${esc(p.repo)}" ${ext}>${esc(p.repo.replace("https://", ""))} ↗</a>`}</div>
         </div>
+        ${p.live ? `<p class="modal__live mono"><span class="accent">● live</span> <a href="${esc(p.live)}" ${ext}>${esc(p.live.replace("https://", ""))} ↗</a>${p.liveNote ? ` <span class="dim">· ${esc(p.liveNote)}</span>` : ""}</p>` : ""}
         ${topo ? `<div class="topo">${topo.svg}<div class="topo__cap">Hover a VLAN to trace its path to the internet. Department names are placeholders.</div></div>` : ""}
         <section class="rep"><h4><span>01</span>Scope</h4><p>${esc(p.scope)}</p></section>
         <section class="rep"><h4><span>02</span>What I built</h4><ul class="ticks">${p.findings.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></section>
@@ -872,7 +881,7 @@
 
   bigName();
 
-  window.JDApp = { setMode, goto, openQuickView, openPalette, openTerminal, openCase, downloadCV, copyEmail, toast, page: PAGE };
+  window.JDApp = { setMode, goto, openQuickView, openPalette, openTerminal, openCase, downloadCV, copyEmail, repoRequest, toast, page: PAGE };
 
   if (window.JDFX) {
     window.JDFX.initHero($("#net"));
