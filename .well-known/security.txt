@@ -5,4 +5,4 @@ Contact: mailto:janithmihijaya123@gmail.com
 Expires: 2027-09-29T00:00:00.000Z
 Preferred-Languages: en
 Canonical: https://janith.qzz.io/.well-known/security.txt
-Policy: https://janith.qzz.io/#security
+Policy: https://janith.qzz.io/lab.html#security

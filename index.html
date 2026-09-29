@@ -35,7 +35,7 @@
    Five more are hidden. Crawlers have their own rules...
   ============================================================
 -->
-<body>
+<body data-page="home">
   <a class="skip-link" href="#main">Skip to content</a>
   <div class="bg-glow" aria-hidden="true"></div>
 
@@ -56,13 +56,11 @@
     <nav class="bar__nav" aria-label="Sections">
       <a href="#whoami">whoami</a>
       <a href="#arsenal">arsenal</a>
-      <a href="#killchain">killchain</a>
       <a href="#cases">cases</a>
       <a href="#research">research</a>
       <a href="#intel">intel</a>
-      <a href="#terminal">shell</a>
-      <a href="#ctf">ctf</a>
       <a href="#contact">contact</a>
+      <a href="lab.html" class="bar__lab">lab ↗</a>
     </nav>
     <div class="bar__right">
       <div class="mode-switch" role="group" aria-label="Team mode">
@@ -80,7 +78,7 @@
 
   <main id="main">
     <!-- ========== HERO ========== -->
-    <section class="hero" id="top">
+    <section class="hero" id="top" data-label="~/home">
       <canvas id="net" class="hero__net" aria-hidden="true"></canvas>
       <div class="container hero__grid">
         <div class="hero__copy">
@@ -93,22 +91,26 @@
           <p class="hero__lede" id="tagline">I break systems to understand them, and build systems that are harder to break.</p>
           <div class="hero__cta">
             <a class="btn btn--primary" href="#cases">Open case files <span aria-hidden="true">→</span></a>
-            <a class="btn" href="#terminal" data-open-terminal>Launch terminal <kbd>`</kbd></a>
+            <a class="btn" href="lab.html">Enter the lab <span aria-hidden="true">↗</span></a>
             <button type="button" class="btn btn--ghost" data-quickview>Quick view <kbd>Q</kbd></button>
           </div>
         </div>
 
-        <aside class="panel scan" aria-label="Profile scan">
-          <div class="panel__head">
-            <span>target.profile</span><span class="scan__state" id="scan-state">scanning…</span>
+        <aside class="panel term term--hero" aria-label="Interactive terminal">
+          <div class="term__chrome">
+            <span class="term__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="term__title mono" id="term-title">guest@jd: ~</span>
+            <span class="term__hint mono">focus <kbd>`</kbd></span>
           </div>
-          <div class="panel__body mono">
-            <p class="scan__cmd"><span class="accent">$</span> nmap -sV --script=whois janith.qzz.io</p>
-            <p class="dim scan__meta">Starting Nmap 7.95 · Host is up (0.0021s latency).</p>
-            <div class="scan__table" id="scan-table" role="table" aria-label="Open services">
-              <div class="scan__row scan__row--head" role="row"><span role="columnheader">PORT</span><span role="columnheader">STATE</span><span role="columnheader">SERVICE</span><span role="columnheader" class="scan__v">VERSION</span></div>
-            </div>
-            <p class="scan__foot"><span class="dim">Host:</span> Homagama, LK <span class="dim">·</span> <span class="dim">Status:</span> <span class="accent" id="scan-status">online</span></p>
+          <div class="term__body" id="xterm" data-lenis-prevent>
+            <p class="term__fallback mono">Starting shell…</p>
+          </div>
+          <div class="term__chips term__chips--in" aria-label="Suggested commands">
+            <span class="term__chips-label mono">try:</span>
+            <button type="button" class="chip chip--btn" data-cmd="about">about</button>
+            <button type="button" class="chip chip--btn" data-cmd="projects">projects</button>
+            <button type="button" class="chip chip--btn" data-cmd="thm">thm</button>
+            <button type="button" class="chip chip--btn" data-cmd="help">help</button>
           </div>
         </aside>
       </div>
@@ -166,38 +168,11 @@
       </div>
     </section>
 
-    <!-- ========== KILL CHAIN ========== -->
-    <section class="section kc" id="killchain" aria-labelledby="h-killchain">
-      <div class="kc__pin" id="kc-pin">
-        <div class="container">
-          <header class="sec-head">
-            <span class="sec-head__idx">03</span>
-            <h2 id="h-killchain" data-scramble><span class="dim">~/</span>kill-chain</h2>
-            <span class="sec-head__line"></span>
-            <span class="sec-head__meta">./trace --attack</span>
-          </header>
-          <p class="sec-lede kc__lede">Every attack follows a chain of 7 steps, and breaking any one of them stops it. For each step, here's how an attacker moves <span class="red">and</span> how a defender breaks the chain.</p>
-
-          <div class="kc__grid">
-            <ol class="kc__rail" id="kc-rail" aria-label="Kill chain stages">
-              <li class="kc__track" aria-hidden="true"><span class="kc__fill" id="kc-fill"></span><span class="kc__packet" id="kc-packet"></span></li>
-            </ol>
-            <div class="kc__stages" id="kc-stages"></div>
-          </div>
-
-          <div class="kc__foot mono">
-            <span class="dim">Lockheed Martin Cyber Kill Chain · mapped to MITRE ATT&amp;CK tactics</span>
-            <span class="kc__hint" id="kc-hint">scroll to advance ↓</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- ========== CASE FILES ========== -->
     <section class="section" id="cases" aria-labelledby="h-cases">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">04</span>
+          <span class="sec-head__idx">03</span>
           <h2 id="h-cases" data-scramble><span class="dim">~/</span>case-files</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">ls -la ./projects</span>
@@ -212,7 +187,7 @@
     <section class="section" id="research" aria-labelledby="h-research">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">05</span>
+          <span class="sec-head__idx">04</span>
           <h2 id="h-research" data-scramble><span class="dim">~/</span>research</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">cat paper.md</span>
@@ -256,7 +231,7 @@
     <section class="section" id="intel" aria-labelledby="h-intel">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">06</span>
+          <span class="sec-head__idx">05</span>
           <h2 id="h-intel" data-scramble><span class="dim">~/</span>intel</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">git log --graph --oneline</span>
@@ -288,78 +263,21 @@
       </div>
     </section>
 
-    <!-- ========== TERMINAL ========== -->
-    <section class="section" id="terminal" aria-labelledby="h-terminal">
+    <!-- ========== LAB TEASER ========== -->
+    <section class="section" id="lab-teaser" data-label="~/lab" aria-labelledby="h-lab">
       <div class="container">
-        <header class="sec-head">
-          <span class="sec-head__idx">07</span>
-          <h2 id="h-terminal" data-scramble><span class="dim">~/</span>shell</h2>
-          <span class="sec-head__line"></span>
-          <span class="sec-head__meta">/bin/jdsh</span>
-        </header>
-        <p class="sec-lede">A real terminal. Type <code>help</code> to get started, or pick a command below.</p>
-
-        <div class="term-wrap">
-          <div class="panel term" data-reveal>
-            <div class="term__chrome">
-              <span class="term__dots" aria-hidden="true"><i></i><i></i><i></i></span>
-              <span class="term__title mono" id="term-title">guest@jd: ~</span>
-              <span class="term__hint mono">focus <kbd>`</kbd></span>
-            </div>
-            <div class="term__body" id="xterm" data-lenis-prevent>
-              <p class="term__fallback mono">Starting shell…</p>
-            </div>
+        <a class="panel teaser" href="lab.html" data-reveal>
+          <div class="teaser__copy">
+            <span class="teaser__tag mono"><span class="blink-dot" aria-hidden="true"></span>~/lab · capture the flag</span>
+            <h2 class="teaser__title" id="h-lab">Think you can hack this site?</h2>
+            <p class="muted">Six flags are hidden across this portfolio. Find them with recon, DevTools, and a real shell. The Lab has the scoreboard, a full terminal, and notes on how this site is secured.</p>
           </div>
-          <div class="term__chips" aria-label="Suggested commands">
-            <span class="term__chips-label mono">try:</span>
-            <button type="button" class="chip chip--btn" data-cmd="help">help</button>
-            <button type="button" class="chip chip--btn" data-cmd="about">about</button>
-            <button type="button" class="chip chip--btn" data-cmd="nmap janith">nmap janith</button>
-            <button type="button" class="chip chip--btn" data-cmd="projects">projects</button>
-            <button type="button" class="chip chip--btn" data-cmd="thm">thm</button>
-            <button type="button" class="chip chip--btn" data-cmd="ls -a">ls -a</button>
-            <button type="button" class="chip chip--btn" data-cmd="sudo hire-me">sudo hire-me</button>
+          <div class="teaser__side">
+            <div class="teaser__flags" id="teaser-flags" aria-hidden="true"></div>
+            <span class="teaser__count mono" id="teaser-count">0 / 6 captured</span>
+            <span class="btn btn--primary">Enter the lab <span aria-hidden="true">↗</span></span>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========== CTF ========== -->
-    <section class="section" id="ctf" aria-labelledby="h-ctf">
-      <div class="container">
-        <header class="sec-head">
-          <span class="sec-head__idx">08</span>
-          <h2 id="h-ctf" data-scramble><span class="dim">~/</span>ctf</h2>
-          <span class="sec-head__line"></span>
-          <span class="sec-head__meta">./capture --flags</span>
-        </header>
-
-        <div class="ctf">
-          <div class="ctf__intro" data-reveal>
-            <p class="ctf__big">This site is also a <span class="accent">capture the flag</span> challenge.</p>
-            <p class="muted">Six flags are hidden across this site. They use the format <code>JD{…}</code>. You'll need recon, DevTools, and some curiosity. Submissions are checked in your browser against SHA-256 hashes, so reading the source won't show you the answers.</p>
-            <div class="ctf__progress">
-              <div class="ctf__bar"><span id="ctf-bar"></span></div>
-              <span class="mono" id="ctf-count">0 / 6 captured</span>
-            </div>
-            <form class="ctf__form" id="ctf-form" autocomplete="off">
-              <label class="sr-only" for="ctf-input">Flag</label>
-              <span class="ctf__prompt mono" aria-hidden="true">flag&gt;</span>
-              <input id="ctf-input" class="mono" type="text" placeholder="JD{...}" spellcheck="false" maxlength="80">
-              <button class="btn btn--primary" type="submit">Submit</button>
-            </form>
-            <p class="ctf__msg mono" id="ctf-msg" role="status" aria-live="polite"></p>
-            <div class="panel ctf__admin" id="ctf-admin" hidden>
-              <div class="panel__head"><span class="red">⚠ admin console</span><span>role=admin</span></div>
-              <div class="panel__body mono">
-                <p>Welcome back, administrator. (Were you, though?)</p>
-                <p>Access was granted because a cookie said so. Never trust the client.</p>
-                <p class="accent" id="ctf-admin-flag"></p>
-              </div>
-            </div>
-          </div>
-          <ol class="flags" id="flags" data-reveal></ol>
-        </div>
+        </a>
       </div>
     </section>
 
@@ -367,7 +285,7 @@
     <section class="section" id="contact" aria-labelledby="h-contact">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">09</span>
+          <span class="sec-head__idx">06</span>
           <h2 id="h-contact" data-scramble><span class="dim">~/</span>contact</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">ssh janith@jd-ops</span>
@@ -403,33 +321,12 @@
       </div>
     </section>
 
-    <!-- ========== SITE SECURITY ========== -->
-    <section class="section section--tight" id="security" aria-labelledby="h-security">
-      <div class="container">
-        <div class="panel secconf" data-reveal>
-          <div class="panel__head"><span id="h-security">/etc/site-security.conf</span><span class="accent">self-audit</span></div>
-          <div class="panel__body mono">
-            <p class="dim"># A security portfolio should be secure too. How this site is built:</p>
-            <ul class="secconf__list">
-              <li><span class="ok">[✓]</span> Content-Security-Policy: scripts limited to self and 3 pinned CDNs</li>
-              <li><span class="ok">[✓]</span> Subresource Integrity (sha384) on every third-party script and stylesheet</li>
-              <li><span class="ok">[✓]</span> No inline scripts, no eval, no frameworks, no build step</li>
-              <li><span class="ok">[✓]</span> No analytics, no trackers, no third-party cookies</li>
-              <li><span class="ok">[✓]</span> RFC 9116 <a href=".well-known/security.txt">/.well-known/security.txt</a></li>
-              <li><span class="ok">[✓]</span> HTTPS enforced · strict referrer policy · rel="noopener" on external links</li>
-              <li><span class="warn">[!]</span> One deliberately insecure cookie (it's a CTF challenge)</li>
-              <li><span class="warn">[!]</span> GitHub Pages can't send custom headers, so CSP is set by meta tag and frame-ancestors isn't enforced</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <footer class="footer">
     <div class="container footer__inner mono">
       <span>© 2026 Janith Deshan · hand-built · hosted on GitHub Pages</span>
-      <span class="footer__right"><span id="foot-flags">flags 0/6</span><span class="dim">·</span><button type="button" class="linkish" data-palette>press ⌘K / Ctrl+K</button></span>
+      <span class="footer__right"><a class="linkish" href="lab.html#security">site security</a><span class="dim">·</span><a class="linkish" href="lab.html#ctf" id="foot-flags">flags 0/6</a><span class="dim">·</span><button type="button" class="linkish" data-palette>press ⌘K / Ctrl+K</button></span>
     </div>
   </footer>
 
