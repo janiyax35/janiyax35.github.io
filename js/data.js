@@ -113,6 +113,67 @@ window.JD = {
     }
   ],
 
+  /* Cyber Kill Chain: 7 stages, each with the attacker's move and the defender's answer.
+     atk / def text is shown side by side; RED mode highlights atk, BLUE mode highlights def. */
+  killchain: [
+    {
+      n: "Reconnaissance", short: "RECON", attack: "TA0043 · Reconnaissance",
+      sum: "Every attack starts by learning the target.",
+      atk: "Map the attack surface: live hosts, open ports, service versions, and anything exposed that shouldn't be.",
+      atkTools: ["Nmap", "Wireshark", "Burp Suite"],
+      def: "Shrink the footprint: close unused ports, segment the network, and flag scan patterns early.",
+      defTools: ["Network Security", "VLAN Segmentation"]
+    },
+    {
+      n: "Weaponization", short: "WEAPON", attack: "TA0042 · Resource Development",
+      sum: "Match a known weakness with a payload built for it.",
+      atk: "Pair a discovered vulnerability with an exploit and payload tailored to the target's stack.",
+      atkTools: ["Metasploit", "Python", "Bash"],
+      def: "Find your own vulnerabilities first. Regular assessment and patching remove the weapon's target.",
+      defTools: ["Vulnerability Assessment", "OWASP Top 10"]
+    },
+    {
+      n: "Delivery", short: "DELIVER", attack: "TA0001 · Initial Access",
+      sum: "Get the payload through the door.",
+      atk: "Deliver through whatever is open: a web form, an exposed service, weak Wi-Fi, or a convincing email.",
+      atkTools: ["Burp Suite", "Metasploit"],
+      def: "Filter at the edge: stateful firewalls, WPA2/WPA3, and strict input validation on every form.",
+      defTools: ["Firewalls", "WPA3", "Input Validation"]
+    },
+    {
+      n: "Exploitation", short: "EXPLOIT", attack: "TA0002 · Execution",
+      sum: "Trigger the flaw and run code.",
+      atk: "Trigger the flaw: injection, broken authentication, or factory-default credentials (Mirai's favourite).",
+      atkTools: ["Burp Suite", "OWASP Top 10", "Kali Linux"],
+      def: "Write secure code: parameterized queries, role-based access, least privilege, and no default passwords.",
+      defTools: ["Secure App Dev", "Spring Boot", "Cryptography"]
+    },
+    {
+      n: "Installation", short: "INSTALL", attack: "TA0003 · Persistence",
+      sum: "Make the foothold survive a reboot.",
+      atk: "Persist with a backdoor, a scheduled task, or a quiet new account, so access survives restarts.",
+      atkTools: ["Kali Linux", "Bash"],
+      def: "Harden every host and watch for change: minimal services, audited accounts, and integrity monitoring.",
+      defTools: ["System Administration", "Linux"]
+    },
+    {
+      n: "Command & Control", short: "C2", attack: "TA0011 · Command and Control",
+      sum: "Open a channel back to the attacker.",
+      atk: "Beacon out to an attacker-controlled server for instructions, the same way Mirai bots reported to C2.",
+      atkTools: ["Metasploit"],
+      def: "Watch outbound traffic: spot beaconing, block unknown destinations, and treat egress as seriously as ingress.",
+      defTools: ["Wireshark", "Network Security"]
+    },
+    {
+      n: "Actions on Objectives", short: "ACTIONS", attack: "TA0010 Exfiltration · TA0040 Impact",
+      sum: "The goal: data, access, or disruption.",
+      atk: "Steal data, pivot deeper, or take systems offline, up to a 1.2 Tbps DDoS.",
+      atkTools: ["Pivoting", "DDoS"],
+      def: "Contain and investigate: segmentation stops the pivot, encryption protects the data, and forensics reconstructs the attack.",
+      defTools: ["Digital Forensics", "Cryptography", "Segmentation"]
+    }
+  ],
+
   projects: [
     {
       id: "CASE-001", slug: "kapruka", featured: true,

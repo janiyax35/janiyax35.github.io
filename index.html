@@ -56,6 +56,7 @@
     <nav class="bar__nav" aria-label="Sections">
       <a href="#whoami">whoami</a>
       <a href="#arsenal">arsenal</a>
+      <a href="#killchain">killchain</a>
       <a href="#cases">cases</a>
       <a href="#research">research</a>
       <a href="#intel">intel</a>
@@ -165,11 +166,38 @@
       </div>
     </section>
 
+    <!-- ========== KILL CHAIN ========== -->
+    <section class="section kc" id="killchain" aria-labelledby="h-killchain">
+      <div class="kc__pin" id="kc-pin">
+        <div class="container">
+          <header class="sec-head">
+            <span class="sec-head__idx">03</span>
+            <h2 id="h-killchain" data-scramble><span class="dim">~/</span>kill-chain</h2>
+            <span class="sec-head__line"></span>
+            <span class="sec-head__meta">./trace --attack</span>
+          </header>
+          <p class="sec-lede kc__lede">Every attack follows a chain of 7 steps, and breaking any one of them stops it. For each step, here's how an attacker moves <span class="red">and</span> how a defender breaks the chain.</p>
+
+          <div class="kc__grid">
+            <ol class="kc__rail" id="kc-rail" aria-label="Kill chain stages">
+              <li class="kc__track" aria-hidden="true"><span class="kc__fill" id="kc-fill"></span><span class="kc__packet" id="kc-packet"></span></li>
+            </ol>
+            <div class="kc__stages" id="kc-stages"></div>
+          </div>
+
+          <div class="kc__foot mono">
+            <span class="dim">Lockheed Martin Cyber Kill Chain · mapped to MITRE ATT&amp;CK tactics</span>
+            <span class="kc__hint" id="kc-hint">scroll to advance ↓</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ========== CASE FILES ========== -->
     <section class="section" id="cases" aria-labelledby="h-cases">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">03</span>
+          <span class="sec-head__idx">04</span>
           <h2 id="h-cases" data-scramble><span class="dim">~/</span>case-files</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">ls -la ./projects</span>
@@ -184,7 +212,7 @@
     <section class="section" id="research" aria-labelledby="h-research">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">04</span>
+          <span class="sec-head__idx">05</span>
           <h2 id="h-research" data-scramble><span class="dim">~/</span>research</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">cat paper.md</span>
@@ -228,7 +256,7 @@
     <section class="section" id="intel" aria-labelledby="h-intel">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">05</span>
+          <span class="sec-head__idx">06</span>
           <h2 id="h-intel" data-scramble><span class="dim">~/</span>intel</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">git log --graph --oneline</span>
@@ -264,7 +292,7 @@
     <section class="section" id="terminal" aria-labelledby="h-terminal">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">06</span>
+          <span class="sec-head__idx">07</span>
           <h2 id="h-terminal" data-scramble><span class="dim">~/</span>shell</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">/bin/jdsh</span>
@@ -300,7 +328,7 @@
     <section class="section" id="ctf" aria-labelledby="h-ctf">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">07</span>
+          <span class="sec-head__idx">08</span>
           <h2 id="h-ctf" data-scramble><span class="dim">~/</span>ctf</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">./capture --flags</span>
@@ -339,7 +367,7 @@
     <section class="section" id="contact" aria-labelledby="h-contact">
       <div class="container">
         <header class="sec-head">
-          <span class="sec-head__idx">08</span>
+          <span class="sec-head__idx">09</span>
           <h2 id="h-contact" data-scramble><span class="dim">~/</span>contact</h2>
           <span class="sec-head__line"></span>
           <span class="sec-head__meta">ssh janith@jd-ops</span>

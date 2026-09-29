@@ -52,6 +52,25 @@
         ${g.wide ? `<div class="skill-legend"><span><i style="background:var(--red)"></i>offensive</span><span><i style="background:var(--cyan)"></i>defensive</span><span><i style="background:linear-gradient(90deg,var(--red) 50%,var(--cyan) 50%)"></i>both</span></div>` : ""}
       </div>`).join("");
 
+    // kill chain
+    const K = D.killchain, p2 = (i) => String(i).padStart(2, "0");
+    const tools = (arr) => arr.map((t) => `<span class="chip">${esc(t)}</span>`).join("");
+    $("#kc-rail").insertAdjacentHTML("beforeend", K.map((s, i) =>
+      `<li class="kc__node" data-i="${i}"><button type="button" aria-label="Stage ${i + 1}: ${esc(s.n)}"><span class="kc__dot">${p2(i + 1)}</span><span class="kc__name">${esc(s.n)}<small>${esc(s.short)}</small></span></button></li>`).join(""));
+    $("#kc-stages").innerHTML = K.map((s, i) => `
+      <article class="panel kc-stage" data-i="${i}">
+        <div class="panel__head"><span>stage <b class="accent">${p2(i + 1)}</b> / ${p2(K.length)}</span><span>ATT&amp;CK · ${esc(s.attack)}</span></div>
+        <div class="panel__body">
+          <span class="kc-stage__num" aria-hidden="true">${p2(i + 1)}</span>
+          <h3 class="kc-stage__title">${esc(s.n)}</h3>
+          <p class="kc-stage__sum">${esc(s.sum)}</p>
+          <div class="kc-duel">
+            <div class="kc-side kc-side--atk" data-team="red"><span class="kc-side__label">▲ attack</span><p>${esc(s.atk)}</p><div class="kc-side__tools">${tools(s.atkTools)}</div></div>
+            <div class="kc-side kc-side--def" data-team="blue"><span class="kc-side__label">■ defend</span><p>${esc(s.def)}</p><div class="kc-side__tools">${tools(s.defTools)}</div></div>
+          </div>
+        </div>
+      </article>`).join("");
+
     // case files
     $("#cases-grid").innerHTML = D.projects.map((p) => `
       <article class="panel case${p.featured ? " case--featured" : ""}" data-slug="${p.slug}"${p.team ? ` data-team="${p.team}"` : ""} data-reveal>
@@ -222,8 +241,10 @@
   function goto(id) {
     const t = id === "top" ? $("#top") : document.getElementById(id);
     if (!t) return;
-    const off = -($("#bar").offsetHeight + 8);
-    if (lenis) lenis.scrollTo(t, { offset: id === "top" ? 0 : off, duration: 1.2 });
+    const off = id === "top" ? 0 : -($("#bar").offsetHeight + 8);
+    // absolute target from the real scroll position (stays correct with pinned sections)
+    const y = Math.max(0, t.getBoundingClientRect().top + window.scrollY + off);
+    if (lenis) lenis.scrollTo(y, { duration: 1.2 });
     else t.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
     history.replaceState(null, "", id === "top" ? location.pathname : "#" + id);
   }
@@ -263,6 +284,71 @@
     });
     // refresh once fonts settle so trigger positions are right
     document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
+  }
+
+  /* ---------- kill chain: pinned, one stage per scroll step ---------- */
+  function killChain() {
+    const sec = $("#killchain");
+    if (!sec || !animate) return; // static stacked layout
+    const nodes = $$(".kc__node", sec), stages = $$(".kc-stage", sec), n = stages.length;
+    const fill = $("#kc-fill"), packet = $("#kc-packet"), hint = $("#kc-hint");
+    let cur = -1;
+
+    function setStage(i) {
+      if (i === cur) return;
+      cur = i;
+      nodes.forEach((nd, j) => {
+        nd.classList.toggle("is-active", j === i);
+        nd.classList.toggle("is-past", j < i);
+        nd.firstElementChild.setAttribute("aria-current", j === i ? "step" : "false");
+      });
+      stages.forEach((st, j) => {
+        st.classList.toggle("is-active", j === i);
+        st.setAttribute("aria-hidden", String(j !== i));
+      });
+      if (hasScramble) {
+        gsap.to(stages[i].querySelector(".kc-stage__title"), { duration: 0.6, scrambleText: { text: D.killchain[i].n, chars: "01<>/#_", speed: 0.9 } });
+      }
+    }
+    function setProgress(p) {
+      // packet sits exactly on node i at the middle of stage i's scroll range
+      const pos = Math.min(1, Math.max(0, (p * n - 0.5) / (n - 1))) * 100;
+      fill.style.height = pos + "%";
+      packet.style.top = pos + "%";
+      hint.classList.toggle("is-done", p > 0.97);
+    }
+
+    gsap.matchMedia().add("(min-width: 900px) and (min-height: 700px)", () => {
+      sec.classList.add("is-pinned");
+      setStage(0);
+      setProgress(0);
+      const st = ScrollTrigger.create({
+        trigger: "#kc-pin",
+        start: "top top",
+        end: () => "+=" + window.innerHeight * (n - 1) * 0.55,
+        pin: true,
+        anticipatePin: 1,
+        onUpdate: (self) => {
+          setProgress(self.progress);
+          setStage(Math.min(n - 1, Math.floor(self.progress * n)));
+        }
+      });
+      const handlers = nodes.map((nd, i) => {
+        const fn = () => {
+          const y = st.start + (st.end - st.start) * ((i + 0.5) / n);
+          if (lenis) lenis.scrollTo(y, { duration: 1 });
+          else window.scrollTo({ top: y, behavior: "smooth" });
+        };
+        nd.firstElementChild.addEventListener("click", fn);
+        return [nd.firstElementChild, fn];
+      });
+      return () => {
+        sec.classList.remove("is-pinned");
+        handlers.forEach(([b, fn]) => b.removeEventListener("click", fn));
+        stages.forEach((s) => { s.classList.remove("is-active"); s.removeAttribute("aria-hidden"); });
+        cur = -1;
+      };
+    });
   }
 
   function navSpy() {
@@ -363,7 +449,7 @@
 
   /* ---------- command palette ---------- */
   const ACTIONS = [
-    ...[["top", "Home"], ["whoami", "~/whoami"], ["arsenal", "~/arsenal · skills"], ["cases", "~/case-files · projects"], ["research", "~/research · IoT & Mirai"], ["intel", "~/intel · THM, certs, timeline"], ["terminal", "~/shell · terminal"], ["ctf", "~/ctf · capture the flag"], ["contact", "~/contact"]]
+    ...[["top", "Home"], ["whoami", "~/whoami"], ["arsenal", "~/arsenal · skills"], ["killchain", "~/kill-chain · attack vs. defense"],["cases", "~/case-files · projects"], ["research", "~/research · IoT & Mirai"], ["intel", "~/intel · THM, certs, timeline"], ["terminal", "~/shell · terminal"], ["ctf", "~/ctf · capture the flag"], ["contact", "~/contact"]]
       .map(([id, l]) => ({ ico: "#", label: `Go to ${l}`, grp: "navigate", run: () => goto(id) })),
     ...D.projects.map((p) => ({ ico: "▣", label: `Open case: ${p.title}`, grp: "case file", run: () => openCase(p.slug) })),
     { ico: "●", label: "Switch to RED TEAM mode", grp: "mode", kw: "offensive attack", run: () => setMode("red") },
@@ -673,6 +759,7 @@
 
   boot().then(() => {
     heroIntro();
+    killChain(); // create the pin before other triggers so their positions include its spacing
     reveals();
     if (location.hash && location.hash.length > 1) setTimeout(() => goto(location.hash.slice(1)), 100);
   });

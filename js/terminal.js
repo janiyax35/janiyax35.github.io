@@ -215,6 +215,18 @@ window.JDTerm = (() => {
       }
     },
     research: { d: "IoT security paper", run: () => ln(FILES["~/research.md"]()) },
+    killchain: {
+      d: "attack vs. defense, 7 stages",
+      run() {
+        D.killchain.forEach((s, i) => {
+          ln(c.acc("0" + (i + 1)) + " " + c.b(pad(s.n, 24)) + c.dim(s.attack));
+          ln("   " + c.red("atk ") + c.mut(s.atk));
+          ln("   " + c.cyan("def ") + c.mut(s.def));
+        });
+        ln("");
+        ln(c.dim("Break any link and the attack fails. ") + c.acc("goto killchain") + c.dim(" for the visual."));
+      }
+    },
     contact: { d: "how to reach me", run: () => ln(FILES["~/contact.txt"]()) },
     nmap: {
       d: "scan a target",
@@ -260,7 +272,7 @@ window.JDTerm = (() => {
     goto: {
       d: "scroll to a section",
       run([s]) {
-        const ids = ["whoami", "arsenal", "cases", "research", "intel", "ctf", "contact", "top"];
+        const ids = ["whoami", "arsenal", "killchain", "cases", "research", "intel", "ctf", "contact", "top"];
         if (!ids.includes(s)) return ln(c.amber("usage: goto <" + ids.join("|") + ">"));
         app().goto && app().goto(s);
       }
