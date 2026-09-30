@@ -16,12 +16,15 @@ Then open http://localhost:5500
 
 | What | File |
 |---|---|
-| All content (profile, skills, projects, research, THM stats, timeline, boot lines) | `js/data.js` |
+| All content (profile, skills, projects, research, THM stats, education, certifications, boot lines) | `js/data.js` |
+| Contact form (EmailJS service, template and public key) | `js/data.js` (`profile.emailjs`) |
 | Colours, fonts, layout | `css/style.css` (tokens at the top) |
 | Home page structure (only content about me) | `index.html` |
-| The Lab: CTF, full shell, site security | `lab.html` |
+| The Lab: CTF, full shell, threat globe, site security | `lab.html` |
 | Terminal commands | `js/terminal.js` (`CMDS` object) |
-| Hero network, Mirai simulation, topology diagram | `js/fx.js` |
+| Hero network, Lab globe, Mirai simulation, topology diagram | `js/fx.js` |
+| Right-click menu | `js/contextmenu.js` |
+| README graphics | `.github/readme/` (see its `BUILD.md`) |
 | CTF flags, hints | `js/ctf.js` + `CTF_SOLUTIONS.md` (local only) |
 
 ## Features
@@ -31,9 +34,10 @@ Then open http://localhost:5500
 - **Case files**: projects written up as engagement reports. The network project has an interactive topology diagram.
 - **Mirai simulation**: an animated model of botnet propagation and DDoS for the research section.
 - **Hero terminal** (xterm.js): auto-runs `whoami`; `help`, `about`, `projects`, `nmap janith`, `lab`, `sudo hire-me`, and more.
-- **The Lab** (`lab.html`): CTF scoreboard (6 flags hidden across the whole site), a full-size shell, and the site-security self-audit.
+- **The Lab** (`lab.html`): CTF scoreboard (6 flags hidden across the whole site), a full-size shell, a drag-to-spin threat globe, and the site-security self-audit.
 - **Command palette**: `Ctrl+K` or `/`. **Quick view**: `Q`. **Terminal**: `` ` ``.
-- **Live GitHub feed**: recently pushed repos from the public GitHub API.
+- **Contact form**: sends through EmailJS, with a honeypot, a 3-second time trap, a 30-second cooldown and a mail-app backup.
+- **Custom right-click menu and cursors**: mouse only. Shift + right-click opens the browser's own menu.
 
 ## Security notes
 
@@ -41,9 +45,11 @@ Then open http://localhost:5500
   ```bash
   curl -s URL | openssl dgst -sha384 -binary | openssl base64 -A
   ```
-- CSP is set with a `<meta>` tag, because GitHub Pages can't set headers. If you add a new CDN or API, add it to the CSP in `index.html`.
-- `.nojekyll` is required. Without it, GitHub Pages hides `/.well-known/`.
+- CSP is set with a `<meta>` tag, because GitHub Pages can't set headers. If you add a new CDN or API, add it to the CSP in both `index.html` and `lab.html`.
+- Keep `.nojekyll`, so `/.well-known/` is served even if the site is ever built with Jekyll again.
 
 ## Deploy (GitHub Pages)
 
-Push to your Pages repo and enable Pages on the `main` branch at `/ (root)`. For the custom domain, keep your existing `CNAME` file (`janith.qzz.io`).
+Pushing to `main` deploys the site through GitHub Actions (`.github/workflows/static.yml`). In the repo settings, Pages must use **GitHub Actions** as its source. Keep the `CNAME` file (`janith.qzz.io`) for the custom domain.
+
+The upload step (`actions/upload-pages-artifact@v3`) skips the `.github` folder, so the README kit isn't published. Newer versions (v4 and later) also skip hidden folders by default. If you upgrade it, set `include-hidden-files: true`, or `/.well-known/security.txt` will stop being served.
