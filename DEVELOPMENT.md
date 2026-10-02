@@ -24,6 +24,7 @@ Then open http://localhost:5500
 | Terminal commands | `js/terminal.js` (`CMDS` object) |
 | Hero network, Lab globe, Mirai simulation, topology diagram | `js/fx.js` |
 | Right-click menu | `js/contextmenu.js` |
+| 404 page (three.js scene) | `404.html` + `js/404.js` |
 | README graphics | `.github/readme/` (see its `BUILD.md`) |
 | CTF flags, hints | `js/ctf.js` + `CTF_SOLUTIONS.md` (local only) |
 
@@ -37,6 +38,7 @@ Then open http://localhost:5500
 - **The Lab** (`lab.html`): CTF scoreboard (6 flags hidden across the whole site), a full-size shell, a drag-to-spin threat globe, and the site-security self-audit.
 - **Command palette**: `Ctrl+K` or `/`. **Quick view**: `Q`. **Terminal**: `` ` ``.
 - **Contact form**: sends through EmailJS, with a honeypot, a 3-second time trap, a 30-second cooldown and a mail-app backup.
+- **404 page**: a three.js scene (particle digits, dropped packets, grid floor). It falls back to a plain page without WebGL and draws one still frame under reduced motion. `old_404.html` is the previous text-only version, kept for reference.
 - **Custom right-click menu and cursors**: mouse only. Shift + right-click opens the browser's own menu.
 
 ## Security notes
@@ -45,7 +47,9 @@ Then open http://localhost:5500
   ```bash
   curl -s URL | openssl dgst -sha384 -binary | openssl base64 -A
   ```
-- CSP is set with a `<meta>` tag, because GitHub Pages can't set headers. If you add a new CDN or API, add it to the CSP in both `index.html` and `lab.html`.
+- CSP is set with a `<meta>` tag, because GitHub Pages can't set headers. If you add a new CDN or API, add it to the CSP in both `index.html` and `lab.html`. `404.html` has its own, smaller CSP.
+- three.js on the 404 page is an ES module, so its hash sits on the `<link rel="modulepreload">` in `404.html`. The URL there and the `import()` in `js/404.js` must match exactly.
+- A 404 can be served at any path depth, so `404.html` uses absolute paths (`/js/404.js`, `/lab.html`).
 - Keep `.nojekyll`, so `/.well-known/` is served even if the site is ever built with Jekyll again.
 
 ## Deploy (GitHub Pages)

@@ -21,7 +21,7 @@
 
 - **What:** the source of my portfolio, [janith.qzz.io](https://janith.qzz.io): a cybersecurity portfolio styled as an operator console, plus The Lab, a small cyber range with a six-flag CTF.
 - **Built by:** me, Janith Deshan, a Cybersecurity undergraduate at SLIIT. Design, code and content.
-- **Stack:** plain HTML, CSS and JavaScript; GSAP, Lenis, xterm.js and EmailJS from pinned CDNs with SRI. No framework, no build step.
+- **Stack:** plain HTML, CSS and JavaScript; GSAP, Lenis, xterm.js, EmailJS and three.js (404 page only) from pinned CDNs with SRI. No framework, no build step.
 - **Hosting:** GitHub Pages, deployed by GitHub Actions, on a custom domain.
 - **Run it:** `python -m http.server 5500`, then open http://localhost:5500
 
@@ -80,7 +80,7 @@ A security portfolio should be secure itself. GitHub Pages can't set response he
 
 | Control | Where | What it stops |
 |---|---|---|
-| Content-Security-Policy (`<meta>`) | `index.html`, `lab.html` | Scripts from anywhere except the site and three pinned CDNs, plus plugins, embedded frames and `<base>` hijacking. Each page allows only the network hosts it needs. |
+| Content-Security-Policy (`<meta>`) | `index.html`, `lab.html`, `404.html` | Scripts from anywhere except the site and three pinned CDNs, plus plugins, embedded frames and `<base>` hijacking. Each page allows only the network hosts it needs. |
 | Subresource Integrity (SHA-384) | every CDN `<script>` and stylesheet | A compromised or tampered CDN file: the browser refuses to run it |
 | Hash-checked data fetch | globe data in `js/fx.js` | Tampered map data from the CDN |
 | CTF flags stored as SHA-256 hashes | `js/ctf.js` | Reading the answers straight out of the source |
