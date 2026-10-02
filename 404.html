@@ -5,35 +5,147 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>404 · Host unreachable | JD//OPS</title>
   <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0A0D12">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+  <!-- A 404 can be served at any depth, so every local path here is absolute. -->
   <style>
-    :root { color-scheme: dark; }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: #0A0D12; color: #E6EDF3; font: 14px/1.7 "JetBrains Mono", Consolas, monospace; }
-    body::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px); }
-    main { width: min(640px, 100%); }
-    h1 { margin: 0 0 8px; font-size: clamp(3rem, 14vw, 7rem); line-height: 1; letter-spacing: -.04em; color: #FF4D5E; }
-    p { margin: 0 0 6px; }
-    .dim { color: #55616E; } .acc { color: #B6FF3B; } .amb { color: #FFB020; }
-    pre { margin: 24px 0; padding: 18px; background: #10151C; border: 1px solid #1C242E; border-radius: 4px; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
-    a { display: inline-block; margin-top: 8px; padding: 12px 20px; background: #B6FF3B; color: #0A0D12; font-weight: 700; text-decoration: none; letter-spacing: .08em; text-transform: uppercase; font-size: 12px; border-radius: 3px; }
-    a:focus-visible { outline: 2px solid #B6FF3B; outline-offset: 3px; }
+    :root {
+      --bg: #0A0D12; --bg-2: #0D1117; --panel: #10151C; --line: #1C242E; --line-2: #2A3542;
+      --text: #E6EDF3; --muted: #8A97A5; --dim: #55616E;
+      --lime: #B6FF3B; --red: #FF4D5E; --cyan: #3BD4FF; --amber: #FFB020;
+      --accent: var(--lime); --accent-ink: #0A0D12; --alert: var(--red);
+      --font-sans: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+      --gutter: clamp(16px, 4vw, 40px);
+      --ease: cubic-bezier(.2, .8, .2, 1);
+      color-scheme: dark;
+    }
+    html[data-mode="red"] { --accent: var(--red); --alert: var(--cyan); }
+    html[data-mode="blue"] { --accent: var(--cyan); --alert: var(--red); }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 400 14px/1.7 var(--font-mono); -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    }
+    body::after { /* scanlines */
+      content: ""; position: fixed; inset: 0; z-index: 90; pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px);
+    }
+    ::selection { background: var(--accent); color: var(--accent-ink); }
+
+    #scene { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .8s var(--ease); }
+    html.has-gl #scene { opacity: 1; }
+    .glow {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 50% 40% at 50% 30%, color-mix(in srgb, var(--alert) 8%, transparent), transparent 70%);
+    }
+
+    .bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: 52px; padding: 0 var(--gutter);
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      font: 500 11px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+      background: color-mix(in srgb, var(--bg) 78%, transparent); border-bottom: 1px solid var(--line);
+      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    }
+    .bar a { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font: 700 14px/1 var(--font-sans); letter-spacing: 0; text-transform: none; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--alert); box-shadow: 0 0 10px var(--alert); animation: blink 1.4s steps(2, jump-none) infinite; }
+    .bar__status { display: inline-flex; align-items: center; gap: 14px; white-space: nowrap; }
+    .bar__status b { font-weight: 500; color: var(--alert); }
+    @keyframes blink { 50% { opacity: .25; } }
+
+    main {
+      position: relative; z-index: 5; min-height: 100%;
+      display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+      padding: 72px var(--gutter) clamp(20px, 5vh, 48px);
+      pointer-events: none; /* let the pointer reach the canvas */
+    }
+    .console { width: min(600px, 100%); pointer-events: auto; }
+
+    h1 {
+      margin: 0 0 16px; text-align: center;
+      font: 700 clamp(4.5rem, 22vw, 9rem)/1 var(--font-mono); letter-spacing: -.04em; color: var(--accent);
+    }
+    h1 span { color: var(--alert); }
+    /* once the 3D digits are on screen the heading stays for screen readers only */
+    html.has-gl h1 { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+    .panel {
+      position: relative; border: 1px solid var(--line); border-radius: 4px;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 86%, transparent), color-mix(in srgb, var(--bg-2) 86%, transparent));
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    }
+    .panel::before, .panel::after { content: ""; position: absolute; width: 10px; height: 10px; pointer-events: none; border: 0 solid var(--accent); }
+    .panel::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+    .panel::after { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+    .panel__head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 16px; border-bottom: 1px solid var(--line);
+      font: 500 11px/1.3 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+    }
+    .panel__head b { font-weight: 500; color: var(--amber); }
+    pre { margin: 0; padding: 14px 16px; font: inherit; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .acc { color: var(--accent); } .dim { color: var(--dim); } .bad { color: var(--alert); }
+
+    .lede { margin: 14px 0 0; text-align: center; font-size: 13px; color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; height: 46px; padding: 0 20px;
+      font: 600 12.5px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; text-decoration: none;
+      color: var(--text); background: color-mix(in srgb, var(--panel) 86%, transparent); border: 1px solid var(--line-2); border-radius: 3px;
+      transition: border-color .2s, color .2s, box-shadow .25s, transform .25s var(--ease);
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn--primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+    .btn--primary:hover { color: var(--accent-ink); transform: translateY(-2px); box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--accent) 70%, transparent); }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    @media (max-width: 520px) {
+      .bar__status span { display: none; }
+      .btn { flex: 1 1 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .dot { animation: none; }
+      #scene, .btn { transition: none; }
+    }
   </style>
 </head>
 <body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="glow" aria-hidden="true"></div>
+
+  <header class="bar">
+    <a href="/" aria-label="Janith Deshan, home"><span class="dot" aria-hidden="true"></span>Janith Deshan</a>
+    <div class="bar__status" aria-hidden="true"><span>packets dropped <b id="drops">0</b></span><b>host unreachable</b></div>
+  </header>
+
   <main>
-    <h1>404</h1>
-    <p class="amb">ERR_HOST_UNREACHABLE</p>
-    <pre><span class="acc">$</span> curl -I https://janith.qzz.io/this-page
-HTTP/2 404
+    <div class="console">
+      <h1>4<span>0</span>4</h1>
+      <div class="panel">
+        <div class="panel__head"><span>trace // response</span><b>ERR_HOST_UNREACHABLE</b></div>
+        <pre><span class="acc">$</span> curl -I https://janith.qzz.io<span id="path">/this-page</span>
+<span class="bad">HTTP/2 404</span>
 server: GitHub.com
 x-note: <span class="dim">nothing here. not even a flag.</span>
 x-hint: <span class="dim">that doesn't mean the other paths are empty.</span></pre>
-    <p class="dim">The page you requested was not found, or it was never meant to be found.</p>
-    <a href="/">cd ~ → home</a>
+      </div>
+      <p class="lede">The page you requested was not found, or it was never meant to be found.</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="/">cd ~ → home</a>
+        <a class="btn" href="/lab.html">open the lab</a>
+      </div>
+    </div>
   </main>
+
+  <!-- three.js is version-pinned; the preload carries the SRI hash for the import() in 404.js -->
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js" integrity="sha384-8/hf5tabFfIo0BPku31TKUvGIKpWGYaMwNtlSNqNyZzXgZCMd4lnOGWbJElML9dv" crossorigin="anonymous">
+  <script defer src="/js/404.js"></script>
 </body>
 </html>
